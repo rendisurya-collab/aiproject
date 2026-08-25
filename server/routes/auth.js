@@ -7,7 +7,7 @@ const { uploadAvatar } = require('../middleware/upload');
 
 const router = express.Router();
 
-// POST /api/auth/register
+// POST /api/auth/register - Register user biasa
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password, phone } = req.body;
@@ -31,21 +31,19 @@ router.post('/register', async (req, res) => {
     // Hash password
     const hashedPassword = bcrypt.hashSync(password, 10);
 
-    // Insert user
+    // Insert user with role 'user'
     db.run(
-      'INSERT INTO users (name, email, password, phone) VALUES (?, ?, ?, ?)',
-      [name, email, hashedPassword, phone || null]
+      'INSERT INTO users (name, email, password, phone, role) VALUES (?, ?, ?, ?, ?)',
+      [name, email, hashedPassword, phone || null, 'user']
     );
 
-    // Get the inserted user's ID
     const result = db.exec('SELECT last_insert_rowid() as id');
     const userId = result[0].values[0][0];
 
     saveDatabase();
 
-    // Generate token
     const token = jwt.sign(
-      { id: userId, email, name },
+      { id: userId, email, name, role: 'user' },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
@@ -59,10 +57,74 @@ router.post('/register', async (req, res) => {
         email,
         phone: phone || null,
         avatar: null,
+        role: 'user',
       },
     });
   } catch (err) {
     console.error('Register error:', err);
+    res.status(500).json({ message: 'Terjadi kesalahan server' });
+  }
+});
+
+// POST /api/auth/register-admin - Register admin
+router.post('/register-admin', async (req, res) => {
+  try {
+    const { name, email, password, phone, adminCode } = req.body;
+
+    // Admin code untuk keamanan agar tidak sembarang orang bisa register admin
+    const ADMIN_SECRET_CODE = process.env.ADMIN_SECRET_CODE || 'RIANRIAS2026';
+
+    if (!adminCode || adminCode !== ADMIN_SECRET_CODE) {
+      return res.status(403).json({ message: 'Kode admin tidak valid' });
+    }
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Nama, email, dan password wajib diisi' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password minimal 6 karakter' });
+    }
+
+    const db = await getDatabase();
+
+    const existing = db.exec('SELECT id FROM users WHERE email = ?', [email]);
+    if (existing.length > 0 && existing[0].values.length > 0) {
+      return res.status(409).json({ message: 'Email sudah terdaftar' });
+    }
+
+    const hashedPassword = bcrypt.hashSync(password, 10);
+
+    db.run(
+      'INSERT INTO users (name, email, password, phone, role) VALUES (?, ?, ?, ?, ?)',
+      [name, email, hashedPassword, phone || null, 'admin']
+    );
+
+    const result = db.exec('SELECT last_insert_rowid() as id');
+    const userId = result[0].values[0][0];
+
+    saveDatabase();
+
+    const token = jwt.sign(
+      { id: userId, email, name, role: 'admin' },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN }
+    );
+
+    res.status(201).json({
+      message: 'Registrasi admin berhasil',
+      token,
+      user: {
+        id: userId,
+        name,
+        email,
+        phone: phone || null,
+        avatar: null,
+        role: 'admin',
+      },
+    });
+  } catch (err) {
+    console.error('Register admin error:', err);
     res.status(500).json({ message: 'Terjadi kesalahan server' });
   }
 });
@@ -99,7 +161,7 @@ router.post('/login', async (req, res) => {
 
     // Generate token
     const token = jwt.sign(
-      { id: user.id, email: user.email, name: user.name },
+      { id: user.id, email: user.email, name: user.name, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
@@ -113,6 +175,7 @@ router.post('/login', async (req, res) => {
         email: user.email,
         phone: user.phone,
         avatar: user.avatar,
+        role: user.role,
       },
     });
   } catch (err) {
