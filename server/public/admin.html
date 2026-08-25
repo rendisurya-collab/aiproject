@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BridalNest Admin - Kelola Produk & Kategori</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:#f8f9fa;color:#333}
+    .header{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;padding:16px 24px;display:flex;justify-content:space-between;align-items:center}
+    .header h1{font-size:1.2rem}
+    .header .right{display:flex;align-items:center;gap:12px}
+    .header .right span{font-size:.8rem;opacity:.9}
+    .header button{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:.75rem}
+    .container{max-width:1000px;margin:0 auto;padding:20px}
+    .auth-box{max-width:380px;margin:80px auto;background:#fff;border-radius:12px;padding:36px;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+    .auth-box h2{text-align:center;color:#16a34a;margin-bottom:6px}
+    .auth-box p{text-align:center;font-size:.8rem;color:#888;margin-bottom:20px}
+    .fg{margin-bottom:14px}
+    .fg label{display:block;font-size:.75rem;font-weight:600;color:#555;margin-bottom:4px}
+    .fg input,.fg select,.fg textarea{width:100%;padding:9px 11px;border:1px solid #ddd;border-radius:7px;font-size:.85rem;outline:none}
+    .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:#16a34a}
+    .fg textarea{resize:vertical;min-height:70px}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    .btn{padding:9px 18px;border:none;border-radius:7px;font-size:.82rem;font-weight:600;cursor:pointer}
+    .btn-p{background:#16a34a;color:#fff}.btn-p:hover{background:#15803d}
+    .btn-s{background:#f3f4f6;color:#333;border:1px solid #ddd}.btn-s:hover{background:#e5e7eb}
+    .btn-d{background:#ef4444;color:#fff}.btn-d:hover{background:#dc2626}
+    .btn-sm{padding:5px 10px;font-size:.7rem}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+    .btn-full{width:100%}
+    .tabs{display:flex;gap:4px;margin-bottom:20px;background:#fff;padding:5px;border-radius:9px;box-shadow:0 1px 4px rgba(0,0,0,.05);flex-wrap:wrap}
+    .tab{padding:9px 18px;border:none;background:none;border-radius:7px;cursor:pointer;font-size:.8rem;font-weight:500;color:#666}
+    .tab.active{background:#16a34a;color:#fff}
+    .card{background:#fff;border-radius:10px;padding:24px;box-shadow:0 1px 6px rgba(0,0,0,.05);margin-bottom:16px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+    .pcard{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.05)}
+    .pcard-img{height:160px;background:linear-gradient(135deg,#dcfce7,#fef9c3);display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .pcard-img img{width:100%;height:100%;object-fit:cover}
+    .pcard-body{padding:14px}
+    .pcard-body h3{font-size:.85rem;margin-bottom:4px;line-height:1.3}
+    .pcard-body .meta{font-size:.7rem;color:#888;margin-bottom:6px}
+    .pcard-body .price{font-size:.95rem;font-weight:700;color:#16a34a;margin-bottom:10px}
+    .pcard-actions{display:flex;gap:6px}
+    .badge{font-size:.6rem;padding:2px 7px;border-radius:20px;font-weight:600;background:#dcfce7;color:#166534}
+    .upload-area{border:2px dashed #ddd;border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px}
+    .upload-area:hover{border-color:#16a34a;background:#f0fdf4}
+    .upload-area p{font-size:.8rem;color:#888;margin-top:6px}
+    .previews{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    .prev{position:relative;width:70px;height:70px;border-radius:7px;overflow:hidden;border:2px solid #eee}
+    .prev img{width:100%;height:100%;object-fit:cover}
+    .prev .rm{position:absolute;top:2px;right:2px;width:18px;height:18px;background:#ef4444;color:#fff;border:none;border-radius:50%;font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .prev .pri{position:absolute;bottom:2px;left:2px;background:#16a34a;color:#fff;font-size:.5rem;padding:1px 4px;border-radius:3px}
+    .alert{padding:10px 14px;border-radius:7px;font-size:.8rem;margin-bottom:14px}
+    .alert-e{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
+    .alert-s{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0}
+    .empty{text-align:center;padding:50px 20px;color:#888}
+    .empty p{font-size:.85rem;margin-top:8px}
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px}
+    .modal{background:#fff;border-radius:14px;max-width:500px;width:100%;max-height:88vh;overflow-y:auto;padding:28px}
+    .modal h2{margin-bottom:16px;font-size:1.1rem}
+    .modal-acts{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+    table{width:100%;border-collapse:collapse;font-size:.82rem}
+    th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #f0f0f0}
+    th{background:#f9fafb;font-weight:600;font-size:.72rem;text-transform:uppercase;color:#666}
+    tr:hover td{background:#f0fdf4}
+    .status-active{color:#16a34a;font-weight:600}
+    .status-inactive{color:#999}
+  </style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const API='';
+let token=localStorage.getItem('admin_token')||'';
+let user=null;
+let products=[];
+let categories=[];
+let tab='products';
+let files=[];
+
+function fmt(n){return new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(n)}
+
+function render(){document.getElementById('app').innerHTML=token?dashHTML():loginHTML()}
+
+function loginHTML(){return `
+<div class="auth-box">
+  <h2>🌿 BridalNest Admin</h2>
+  <p>Masuk untuk mengelola produk & kategori</p>
+  <div id="msg"></div>
+  <form onsubmit="doLogin(event)">
+    <div class="fg"><label>Email</label><input type="email" id="em" required></div>
+    <div class="fg"><label>Password</label><input type="password" id="pw" required></div>
+    <button class="btn btn-p btn-full" id="lbtn">Masuk</button>
+  </form>
+</div>`}
+
+async function doLogin(e){
+  e.preventDefault();
+  const b=document.getElementById('lbtn');b.disabled=true;b.textContent='Memproses...';
+  try{
+    const r=await fetch(API+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.getElementById('em').value,password:document.getElementById('pw').value})});
+    const d=await r.json();
+    if(r.ok){token=d.token;user=d.user;localStorage.setItem('admin_token',token);render();loadAll()}
+    else{document.getElementById('msg').innerHTML=`<div class="alert alert-e">${d.message}</div>`;b.disabled=false;b.textContent='Masuk'}
+  }catch(er){document.getElementById('msg').innerHTML='<div class="alert alert-e">Tidak dapat terhubung ke server</div>';b.disabled=false;b.textContent='Masuk'}
+}
+
+function logout(){token='';user=null;localStorage.removeItem('admin_token');render()}
+
+function dashHTML(){return `
+<div class="header"><h1>🌿 BridalNest Admin</h1><div class="right"><span>${user?user.name:''}</span><button onclick="logout()">Logout</button></div></div>
+<div class="container">
+  <div class="tabs">
+    <button class="tab ${tab==='products'?'active':''}" onclick="switchTab('products')">📦 Produk</button>
+    <button class="tab ${tab==='upload'?'active':''}" onclick="switchTab('upload')">➕ Unggah Produk</button>
+    <button class="tab ${tab==='categories'?'active':''}" onclick="switchTab('categories')">🏷️ Kategori</button>
+  </div>
+  <div id="content"></div>
+</div>
+<div id="modal"></div>`}
+
+function switchTab(t){tab=t;renderContent()}
+function renderContent(){
+  const c=document.getElementById('content');
+  if(!c)return;
+  if(tab==='products')c.innerHTML=listHTML();
+  else if(tab==='upload')c.innerHTML=uploadHTML();
+  else if(tab==='categories')c.innerHTML=catHTML();
+  if(tab==='upload')setupDrop();
+}
+
+async function loadAll(){await Promise.all([loadProducts(),loadCategories()]); renderContent()}
+
+// ===== PRODUCTS =====
+async function loadProducts(){
+  try{const r=await fetch(API+'/api/products/user/my-products',{headers:{'Authorization':'Bearer '+token}});if(r.ok){const d=await r.json();products=d.products}}catch(e){}
+}
+
+function listHTML(){
+  if(!products.length)return '<div class="empty"><p style="font-size:2rem">📦</p><p>Belum ada produk.</p></div>';
+  return `<p style="font-size:.78rem;color:#888;margin-bottom:12px">${products.length} produk</p><div class="grid">${products.map(p=>`
+    <div class="pcard">
+      <div class="pcard-img">${p.image?`<img src="${p.image}"/>`:'<span style="font-size:2.5rem">📷</span>'}</div>
+      <div class="pcard-body">
+        <div class="meta"><span class="badge">Sewa</span> ${p.category||''}</div>
+        <h3>${p.name}</h3>
+        <div class="price">${fmt(p.price)}/hari</div>
+        <div class="pcard-actions">
+          <button class="btn btn-s btn-sm" onclick="openEditProduct(${p.id})">✏️ Edit</button>
+          <button class="btn btn-d btn-sm" onclick="doDeleteProduct(${p.id})">🗑️ Hapus</button>
+        </div>
+      </div>
+    </div>`).join('')}</div>`}
+
+function catOptions(){return categories.map(c=>`<option value="${c.name}">${c.icon} ${c.name}</option>`).join('')}
+
+function uploadHTML(){return `
+<div class="card">
+  <h2 style="font-size:1rem;margin-bottom:16px">Unggah Produk Baru</h2>
+  <div id="umsg"></div>
+  <form onsubmit="doUpload(event)" id="uform">
+    <div class="upload-area" id="drop-area" onclick="document.getElementById('fi').click()">
+      <p style="font-size:1.5rem">📸</p>
+      <p><b>Klik atau seret foto ke sini</b><br/>Maks 5 foto, 10MB per file</p>
+    </div>
+    <input type="file" id="fi" accept="image/*" multiple hidden onchange="addFiles(event)"/>
+    <div class="previews" id="pv"></div>
+    <div class="fg"><label>Nama Produk *</label><input id="un" required placeholder="Contoh: Gaun Pengantin Ballgown"/></div>
+    <div class="fg"><label>Deskripsi</label><textarea id="ud" placeholder="Deskripsikan produk..."></textarea></div>
+    <div class="row2">
+      <div class="fg"><label>Kategori *</label><select id="uc" required><option value="">Pilih</option>${catOptions()}</select></div>
+      <div class="fg"><label>Harga Sewa/Hari (Rp) *</label><input type="number" id="up" required placeholder="0"/></div>
+    </div>
+    <div class="row2">
+      <div class="fg"><label>Kondisi</label><select id="ucon"><option value="">-</option><option>Baru</option><option>Seperti Baru</option><option>95% Like New</option><option>90% Like New</option><option>Sangat Baik</option><option>Baik</option></select></div>
+      <div class="fg"><label>Lokasi</label><input id="ul" placeholder="Jakarta Selatan"/></div>
+    </div>
+    <div class="row2">
+      <div class="fg"><label>Ukuran</label><input id="us" placeholder="S, M, L, XL"/></div>
+      <div class="fg"><label>Termasuk</label><input id="ui" placeholder="Veil, Petticoat"/></div>
+    </div>
+    <button class="btn btn-p" id="ubtn">📤 Unggah Produk</button>
+  </form>
+</div>`}
+
+function setupDrop(){
+  const a=document.getElementById('drop-area');if(!a)return;
+  a.addEventListener('dragover',e=>{e.preventDefault();a.style.borderColor='#16a34a';a.style.background='#f0fdf4'});
+  a.addEventListener('dragleave',()=>{a.style.borderColor='#ddd';a.style.background=''});
+  a.addEventListener('drop',e=>{e.preventDefault();a.style.borderColor='#ddd';a.style.background='';addFiles({target:{files:e.dataTransfer.files}})});
+}
+
+function addFiles(e){
+  const f=Array.from(e.target.files).filter(x=>x.type.startsWith('image/'));
+  if(files.length+f.length>5){alert('Maks 5 gambar');return}
+  f.forEach(x=>{if(x.size<=10*1024*1024)files.push(x)});showPreviews()
+}
+function showPreviews(){
+  const c=document.getElementById('pv');if(!c)return;c.innerHTML='';
+  files.forEach((f,i)=>{const r=new FileReader();r.onload=e=>{c.innerHTML+=`<div class="prev"><img src="${e.target.result}"/><button class="rm" onclick="files.splice(${i},1);showPreviews()">×</button>${i===0?'<span class="pri">Utama</span>':''}</div>`};r.readAsDataURL(f)})
+}
+
+async function doUpload(e){
+  e.preventDefault();
+  if(!files.length){document.getElementById('umsg').innerHTML='<div class="alert alert-e">Minimal 1 foto</div>';return}
+  const b=document.getElementById('ubtn');b.disabled=true;b.textContent='Mengunggah...';
+  const fd=new FormData();
+  fd.append('name',document.getElementById('un').value);
+  fd.append('description',document.getElementById('ud').value);
+  const catName=document.getElementById('uc').value;
+  fd.append('category',catName);
+  const cat=categories.find(c=>c.name===catName);
+  fd.append('categorySlug',cat?cat.slug:catName.toLowerCase().replace(/[&\s]+/g,'-'));
+  fd.append('type','sewa');
+  fd.append('price',document.getElementById('up').value);
+  const con=document.getElementById('ucon').value;if(con&&con!=='-')fd.append('condition',con);
+  const loc=document.getElementById('ul').value;if(loc)fd.append('location',loc);
+  const sz=document.getElementById('us').value;if(sz)fd.append('sizes',sz);
+  const inc=document.getElementById('ui').value;if(inc)fd.append('includes',inc);
+  files.forEach(f=>fd.append('images',f));
+  try{
+    const r=await fetch(API+'/api/upload/product',{method:'POST',headers:{'Authorization':'Bearer '+token},body:fd});
+    const d=await r.json();
+    if(r.ok){document.getElementById('umsg').innerHTML='<div class="alert alert-s">✅ Produk berhasil diunggah!</div>';document.getElementById('uform').reset();files=[];showPreviews();loadProducts()}
+    else{document.getElementById('umsg').innerHTML=`<div class="alert alert-e">${d.message}</div>`}
+  }catch(er){document.getElementById('umsg').innerHTML='<div class="alert alert-e">Gagal terhubung ke server</div>'}
+  b.disabled=false;b.textContent='📤 Unggah Produk';
+}
+
+function openEditProduct(id){
+  const p=products.find(x=>x.id===id);if(!p)return;
+  document.getElementById('modal').innerHTML=`
+  <div class="modal-bg" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h2>✏️ Edit Produk</h2>
+      <div id="emsg"></div>
+      <form onsubmit="doUpdateProduct(event,${p.id})">
+        <div class="fg"><label>Nama *</label><input id="en" value="${p.name||''}" required/></div>
+        <div class="fg"><label>Deskripsi</label><textarea id="ed">${p.description||''}</textarea></div>
+        <div class="row2">
+          <div class="fg"><label>Kategori *</label><select id="ec" required>${categories.map(c=>`<option value="${c.name}" ${p.category===c.name?'selected':''}>${c.icon} ${c.name}</option>`).join('')}</select></div>
+          <div class="fg"><label>Harga Sewa/Hari *</label><input type="number" id="ep" value="${p.price||''}" required/></div>
+        </div>
+        <div class="row2">
+          <div class="fg"><label>Kondisi</label><select id="econ">${['','Baru','Seperti Baru','95% Like New','90% Like New','Sangat Baik','Baik'].map(c=>`<option ${p.condition===c?'selected':''}>${c||'-'}</option>`).join('')}</select></div>
+          <div class="fg"><label>Lokasi</label><input id="el" value="${p.location||''}"/></div>
+        </div>
+        <div class="row2">
+          <div class="fg"><label>Ukuran</label><input id="es" value="${p.sizes||''}"/></div>
+          <div class="fg"><label>Termasuk</label><input id="ei" value="${p.includes||''}"/></div>
+        </div>
+        <div class="modal-acts"><button type="button" class="btn btn-s" onclick="closeModal()">Batal</button><button class="btn btn-p" id="ebtn">💾 Simpan</button></div>
+      </form>
+    </div>
+  </div>`;
+}
+
+async function doUpdateProduct(e,id){
+  e.preventDefault();
+  const b=document.getElementById('ebtn');b.disabled=true;b.textContent='Menyimpan...';
+  const catName=document.getElementById('ec').value;
+  const cat=categories.find(c=>c.name===catName);
+  const body={name:document.getElementById('en').value,description:document.getElementById('ed').value,category:catName,categorySlug:cat?cat.slug:catName.toLowerCase().replace(/[&\s]+/g,'-'),type:'sewa',price:parseInt(document.getElementById('ep').value),condition:document.getElementById('econ').value==='-'?null:document.getElementById('econ').value,location:document.getElementById('el').value||null,sizes:document.getElementById('es').value||null,includes:document.getElementById('ei').value||null};
+  try{
+    const r=await fetch(API+'/api/products/'+id,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body)});
+    const d=await r.json();
+    if(r.ok){closeModal();loadProducts().then(()=>renderContent())}
+    else{document.getElementById('emsg').innerHTML=`<div class="alert alert-e">${d.message}</div>`;b.disabled=false;b.textContent='💾 Simpan'}
+  }catch(er){document.getElementById('emsg').innerHTML='<div class="alert alert-e">Gagal</div>';b.disabled=false;b.textContent='💾 Simpan'}
+}
+
+async function doDeleteProduct(id){
+  if(!confirm('Yakin ingin menghapus produk ini?'))return;
+  try{const r=await fetch(API+'/api/products/'+id,{method:'DELETE',headers:{'Authorization':'Bearer '+token}});if(r.ok){await loadProducts();renderContent()}else{const d=await r.json();alert(d.message||'Gagal')}}catch(e){alert('Gagal terhubung')}
+}
+
+function closeModal(){document.getElementById('modal').innerHTML=''}
+
+// ===== CATEGORIES =====
+async function loadCategories(){
+  try{const r=await fetch(API+'/api/categories/all',{headers:{'Authorization':'Bearer '+token}});if(r.ok){const d=await r.json();categories=d.categories}}catch(e){}
+}
+
+function catHTML(){return `
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <h2 style="font-size:1rem">Kelola Kategori</h2>
+    <button class="btn btn-p btn-sm" onclick="openAddCategory()">➕ Tambah Kategori</button>
+  </div>
+  <div id="cmsg"></div>
+  ${categories.length?`
+  <table>
+    <thead><tr><th>Icon</th><th>Nama</th><th>Slug</th><th>Urutan</th><th>Status</th><th>Aksi</th></tr></thead>
+    <tbody>${categories.map(c=>`
+      <tr>
+        <td style="font-size:1.3rem">${c.icon}</td>
+        <td><b>${c.name}</b>${c.description?`<br/><span style="font-size:.7rem;color:#888">${c.description}</span>`:''}</td>
+        <td><code style="font-size:.7rem;background:#f3f4f6;padding:2px 6px;border-radius:4px">${c.slug}</code></td>
+        <td>${c.sort_order}</td>
+        <td><span class="${c.is_active?'status-active':'status-inactive'}">${c.is_active?'Aktif':'Nonaktif'}</span></td>
+        <td><button class="btn btn-s btn-sm" onclick="openEditCategory(${c.id})">✏️</button> <button class="btn btn-d btn-sm" onclick="doDeleteCategory(${c.id})">🗑️</button></td>
+      </tr>`).join('')}</tbody>
+  </table>`:'<div class="empty"><p>Belum ada kategori</p></div>'}
+</div>`}
+
+function openAddCategory(){
+  document.getElementById('modal').innerHTML=`
+  <div class="modal-bg" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h2>➕ Tambah Kategori</h2>
+      <div id="camsg"></div>
+      <form onsubmit="doAddCategory(event)">
+        <div class="fg"><label>Nama Kategori *</label><input id="cn" required placeholder="Contoh: Gaun Pengantin"/></div>
+        <div class="row3">
+          <div class="fg"><label>Slug *</label><input id="cs" required placeholder="gaun"/></div>
+          <div class="fg"><label>Icon (emoji)</label><input id="ci" placeholder="👗" value="📦"/></div>
+          <div class="fg"><label>Urutan</label><input type="number" id="co" value="0"/></div>
+        </div>
+        <div class="fg"><label>Deskripsi</label><input id="cd" placeholder="Deskripsi singkat kategori"/></div>
+        <div class="modal-acts"><button type="button" class="btn btn-s" onclick="closeModal()">Batal</button><button class="btn btn-p">💾 Simpan</button></div>
+      </form>
+    </div>
+  </div>`;
+  // Auto-generate slug from name
+  document.getElementById('cn').addEventListener('input',e=>{document.getElementById('cs').value=e.target.value.toLowerCase().replace(/[&\s]+/g,'-').replace(/[^a-z0-9-]/g,'')});
+}
+
+async function doAddCategory(e){
+  e.preventDefault();
+  const body={name:document.getElementById('cn').value,slug:document.getElementById('cs').value,icon:document.getElementById('ci').value||'📦',description:document.getElementById('cd').value||null,sort_order:parseInt(document.getElementById('co').value)||0};
+  try{
+    const r=await fetch(API+'/api/categories',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body)});
+    const d=await r.json();
+    if(r.ok){closeModal();await loadCategories();renderContent()}
+    else{document.getElementById('camsg').innerHTML=`<div class="alert alert-e">${d.message}</div>`}
+  }catch(er){document.getElementById('camsg').innerHTML='<div class="alert alert-e">Gagal</div>'}
+}
+
+function openEditCategory(id){
+  const c=categories.find(x=>x.id===id);if(!c)return;
+  document.getElementById('modal').innerHTML=`
+  <div class="modal-bg" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h2>✏️ Edit Kategori</h2>
+      <div id="cemsg"></div>
+      <form onsubmit="doUpdateCategory(event,${c.id})">
+        <div class="fg"><label>Nama Kategori *</label><input id="cen" value="${c.name}" required/></div>
+        <div class="row3">
+          <div class="fg"><label>Slug *</label><input id="ces" value="${c.slug}" required/></div>
+          <div class="fg"><label>Icon</label><input id="cei" value="${c.icon||'📦'}"/></div>
+          <div class="fg"><label>Urutan</label><input type="number" id="ceo" value="${c.sort_order||0}"/></div>
+        </div>
+        <div class="fg"><label>Deskripsi</label><input id="ced" value="${c.description||''}"/></div>
+        <div class="fg"><label>Status</label><select id="cea"><option value="1" ${c.is_active?'selected':''}>Aktif</option><option value="0" ${!c.is_active?'selected':''}>Nonaktif</option></select></div>
+        <div class="modal-acts"><button type="button" class="btn btn-s" onclick="closeModal()">Batal</button><button class="btn btn-p">💾 Simpan</button></div>
+      </form>
+    </div>
+  </div>`;
+}
+
+async function doUpdateCategory(e,id){
+  e.preventDefault();
+  const body={name:document.getElementById('cen').value,slug:document.getElementById('ces').value,icon:document.getElementById('cei').value||'📦',description:document.getElementById('ced').value||null,sort_order:parseInt(document.getElementById('ceo').value)||0,is_active:document.getElementById('cea').value==='1'};
+  try{
+    const r=await fetch(API+'/api/categories/'+id,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body)});
+    const d=await r.json();
+    if(r.ok){closeModal();await loadCategories();renderContent()}
+    else{document.getElementById('cemsg').innerHTML=`<div class="alert alert-e">${d.message}</div>`}
+  }catch(er){document.getElementById('cemsg').innerHTML='<div class="alert alert-e">Gagal</div>'}
+}
+
+async function doDeleteCategory(id){
+  if(!confirm('Yakin ingin menghapus kategori ini?'))return;
+  try{
+    const r=await fetch(API+'/api/categories/'+id,{method:'DELETE',headers:{'Authorization':'Bearer '+token}});
+    const d=await r.json();
+    if(r.ok){await loadCategories();renderContent()}
+    else{alert(d.message||'Gagal menghapus')}
+  }catch(e){alert('Gagal terhubung')}
+}
+
+// ===== INIT =====
+(async()=>{
+  if(token){
+    try{const r=await fetch(API+'/api/auth/profile',{headers:{'Authorization':'Bearer '+token}});if(r.ok){const d=await r.json();user=d.user}else{token='';localStorage.removeItem('admin_token')}}catch(e){token='';localStorage.removeItem('admin_token')}
+  }
+  render();
+  if(token)loadAll();
+})();
+</script>
+</body>
+</html>

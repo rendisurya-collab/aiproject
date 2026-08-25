@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+server/node_modules/
+
+# Build output
+dist/
+
+# Environment
+server/.env
+
+# Database (will be created at runtime)
+server/database/*.db
+
+# Uploads (user uploaded files)
+server/uploads/avatars/*
+server/uploads/products/*
+!server/uploads/avatars/.gitkeep
+!server/uploads/products/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
