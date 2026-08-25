@@ -153,6 +153,7 @@ function dashHTML(){return `
     <button class="tab ${tab==='products'?'active':''}" onclick="switchTab('products')">📦 Produk</button>
     <button class="tab ${tab==='upload'?'active':''}" onclick="switchTab('upload')">➕ Unggah Produk</button>
     <button class="tab ${tab==='categories'?'active':''}" onclick="switchTab('categories')">🏷️ Kategori</button>
+    <button class="tab ${tab==='banners'?'active':''}" onclick="switchTab('banners')">🖼️ Banner</button>
   </div>
   <div id="content"></div>
 </div>
@@ -165,10 +166,11 @@ function renderContent(){
   if(tab==='products')c.innerHTML=listHTML();
   else if(tab==='upload')c.innerHTML=uploadHTML();
   else if(tab==='categories')c.innerHTML=catHTML();
+  else if(tab==='banners')c.innerHTML=bannerHTML();
   if(tab==='upload')setupDrop();
 }
 
-async function loadAll(){await Promise.all([loadProducts(),loadCategories()]); renderContent()}
+async function loadAll(){await Promise.all([loadProducts(),loadCategories(),loadBanners()]); renderContent()}
 
 // ===== PRODUCTS =====
 async function loadProducts(){
@@ -416,6 +418,152 @@ async function doDeleteCategory(id){
     if(r.ok){await loadCategories();renderContent()}
     else{alert(d.message||'Gagal menghapus')}
   }catch(e){alert('Gagal terhubung')}
+}
+
+// ===== BANNERS =====
+let banners=[];
+
+async function loadBanners(){
+  try{const r=await fetch(API+'/api/banners/all',{headers:{'Authorization':'Bearer '+token}});if(r.ok){const d=await r.json();banners=d.banners||[]}}catch(e){}
+}
+
+function bannerHTML(){return `
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <h2 style="font-size:1rem">Kelola Banner / Slide Homepage</h2>
+    <button class="btn btn-p btn-sm" onclick="openAddBanner()">➕ Tambah Banner</button>
+  </div>
+  <div id="bmsg"></div>
+  ${banners.length?`
+  <div class="grid">${banners.map(b=>`
+    <div class="pcard">
+      <div class="pcard-img">${b.image?`<img src="${b.image}"/>`:'<span style="font-size:2rem;color:#ccc">🖼️ No Image</span>'}</div>
+      <div class="pcard-body">
+        <h3>${b.title}</h3>
+        <p style="font-size:.7rem;color:#888;margin-bottom:6px">${b.subtitle||''}</p>
+        <p style="font-size:.65rem;color:#16a34a">${b.link||'/products'}</p>
+        <div style="margin-top:8px;display:flex;gap:4px;align-items:center">
+          <span style="font-size:.6rem;color:${b.is_active?'#16a34a':'#999'}">${b.is_active?'● Aktif':'● Nonaktif'}</span>
+        </div>
+        <div class="pcard-actions" style="margin-top:8px">
+          <button class="btn btn-s btn-sm" onclick="openEditBanner(${b.id})">✏️ Edit</button>
+          <button class="btn btn-d btn-sm" onclick="doDeleteBanner(${b.id})">🗑️</button>
+        </div>
+      </div>
+    </div>`).join('')}</div>`:'<div class="empty"><p style="font-size:2rem">🖼️</p><p>Belum ada banner. Tambahkan banner untuk tampilan homepage.</p></div>'}
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h2 style="font-size:1rem;margin-bottom:12px">Gambar Kategori</h2>
+  <p style="font-size:.75rem;color:#888;margin-bottom:14px">Upload gambar untuk setiap kategori agar tampil sebagai card yang bisa diklik di homepage.</p>
+  <div class="grid">${categories.map(c=>`
+    <div class="pcard">
+      <div class="pcard-img">${c.image?`<img src="${c.image}"/>`:`<span style="font-size:2rem">${c.icon}</span>`}</div>
+      <div class="pcard-body">
+        <h3>${c.icon} ${c.name}</h3>
+        <input type="file" accept="image/*" id="catimg-${c.id}" hidden onchange="uploadCatImage(${c.id})"/>
+        <button class="btn btn-s btn-sm" onclick="document.getElementById('catimg-${c.id}').click()" style="margin-top:6px">📷 ${c.image?'Ganti':'Upload'} Gambar</button>
+      </div>
+    </div>`).join('')}</div>
+</div>`}
+
+function openAddBanner(){
+  document.getElementById('modal').innerHTML=`
+  <div class="modal-bg" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h2>➕ Tambah Banner</h2>
+      <div id="bamsg"></div>
+      <form onsubmit="doAddBanner(event)" enctype="multipart/form-data">
+        <div class="fg"><label>Gambar Banner *</label><input type="file" id="bimg" accept="image/*" required/></div>
+        <div class="fg"><label>Judul *</label><input id="bt" required placeholder="Contoh: Promo Sewa Gaun"/></div>
+        <div class="fg"><label>Subtitle</label><input id="bs" placeholder="Deskripsi singkat"/></div>
+        <div class="row2">
+          <div class="fg"><label>Link Tujuan</label><input id="bl" value="/products" placeholder="/products"/></div>
+          <div class="fg"><label>Teks Tombol</label><input id="bb" value="Lihat Selengkapnya"/></div>
+        </div>
+        <div class="fg"><label>Urutan</label><input type="number" id="bo" value="0"/></div>
+        <div class="modal-acts"><button type="button" class="btn btn-s" onclick="closeModal()">Batal</button><button class="btn btn-p">📤 Upload Banner</button></div>
+      </form>
+    </div>
+  </div>`;
+}
+
+async function doAddBanner(e){
+  e.preventDefault();
+  const fd=new FormData();
+  fd.append('image',document.getElementById('bimg').files[0]);
+  fd.append('title',document.getElementById('bt').value);
+  fd.append('subtitle',document.getElementById('bs').value);
+  fd.append('link',document.getElementById('bl').value);
+  fd.append('button_text',document.getElementById('bb').value);
+  fd.append('sort_order',document.getElementById('bo').value);
+  try{
+    const r=await fetch(API+'/api/banners',{method:'POST',headers:{'Authorization':'Bearer '+token},body:fd});
+    const d=await r.json();
+    if(r.ok){closeModal();await loadBanners();renderContent()}
+    else{document.getElementById('bamsg').innerHTML=`<div class="alert alert-e">${d.message}</div>`}
+  }catch(er){document.getElementById('bamsg').innerHTML='<div class="alert alert-e">Gagal</div>'}
+}
+
+function openEditBanner(id){
+  const b=banners.find(x=>x.id===id);if(!b)return;
+  document.getElementById('modal').innerHTML=`
+  <div class="modal-bg" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h2>✏️ Edit Banner</h2>
+      <div id="bemsg"></div>
+      <form onsubmit="doUpdateBanner(event,${b.id})" enctype="multipart/form-data">
+        ${b.image?`<div style="margin-bottom:12px;border-radius:8px;overflow:hidden;height:120px"><img src="${b.image}" style="width:100%;height:100%;object-fit:cover"/></div>`:''}
+        <div class="fg"><label>Ganti Gambar (opsional)</label><input type="file" id="beimg" accept="image/*"/></div>
+        <div class="fg"><label>Judul *</label><input id="bet" value="${b.title}" required/></div>
+        <div class="fg"><label>Subtitle</label><input id="bes" value="${b.subtitle||''}"/></div>
+        <div class="row2">
+          <div class="fg"><label>Link Tujuan</label><input id="bel" value="${b.link||'/products'}"/></div>
+          <div class="fg"><label>Teks Tombol</label><input id="beb" value="${b.button_text||'Lihat Selengkapnya'}"/></div>
+        </div>
+        <div class="row2">
+          <div class="fg"><label>Urutan</label><input type="number" id="beo" value="${b.sort_order||0}"/></div>
+          <div class="fg"><label>Status</label><select id="bea"><option value="1" ${b.is_active?'selected':''}>Aktif</option><option value="0" ${!b.is_active?'selected':''}>Nonaktif</option></select></div>
+        </div>
+        <div class="modal-acts"><button type="button" class="btn btn-s" onclick="closeModal()">Batal</button><button class="btn btn-p">💾 Simpan</button></div>
+      </form>
+    </div>
+  </div>`;
+}
+
+async function doUpdateBanner(e,id){
+  e.preventDefault();
+  const fd=new FormData();
+  const file=document.getElementById('beimg').files[0];
+  if(file)fd.append('image',file);
+  fd.append('title',document.getElementById('bet').value);
+  fd.append('subtitle',document.getElementById('bes').value);
+  fd.append('link',document.getElementById('bel').value);
+  fd.append('button_text',document.getElementById('beb').value);
+  fd.append('sort_order',document.getElementById('beo').value);
+  fd.append('is_active',document.getElementById('bea').value);
+  try{
+    const r=await fetch(API+'/api/banners/'+id,{method:'PUT',headers:{'Authorization':'Bearer '+token},body:fd});
+    const d=await r.json();
+    if(r.ok){closeModal();await loadBanners();renderContent()}
+    else{document.getElementById('bemsg').innerHTML=`<div class="alert alert-e">${d.message}</div>`}
+  }catch(er){document.getElementById('bemsg').innerHTML='<div class="alert alert-e">Gagal</div>'}
+}
+
+async function doDeleteBanner(id){
+  if(!confirm('Yakin hapus banner ini?'))return;
+  try{const r=await fetch(API+'/api/banners/'+id,{method:'DELETE',headers:{'Authorization':'Bearer '+token}});if(r.ok){await loadBanners();renderContent()}}catch(e){}
+}
+
+async function uploadCatImage(catId){
+  const input=document.getElementById('catimg-'+catId);
+  const file=input.files[0];if(!file)return;
+  const fd=new FormData();fd.append('image',file);
+  try{
+    const r=await fetch(API+'/api/categories/'+catId+'/image',{method:'POST',headers:{'Authorization':'Bearer '+token},body:fd});
+    if(r.ok){await loadCategories();renderContent()}
+    else{const d=await r.json();alert(d.message||'Gagal upload')}
+  }catch(e){alert('Gagal upload gambar')}
 }
 
 // ===== INIT =====

@@ -102,6 +102,24 @@ async function initDatabase() {
     )
   `);
 
+  // Add image column to categories if not exists
+  try { db.run('ALTER TABLE categories ADD COLUMN image TEXT'); } catch(e) {}
+
+  // Banners table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS banners (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      subtitle TEXT,
+      image TEXT,
+      link TEXT DEFAULT '/products',
+      button_text TEXT DEFAULT 'Lihat Selengkapnya',
+      sort_order INTEGER DEFAULT 0,
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Seed default categories if empty
   const catCount = db.exec('SELECT COUNT(*) FROM categories');
   if (catCount[0].values[0][0] === 0) {

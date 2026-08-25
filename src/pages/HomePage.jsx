@@ -1,41 +1,155 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Shield, Truck, RefreshCw, Headphones } from 'lucide-react';
-import HeroSection from '../components/HeroSection';
+import { ArrowRight, Shield, Truck, RefreshCw, Headphones, ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
-import CategoryCard from '../components/CategoryCard';
 import { products, categories as defaultCategories } from '../data/products';
 
 export default function HomePage() {
+  const [banners, setBanners] = useState([]);
   const [categories, setCategories] = useState(defaultCategories);
+  const [currentBanner, setCurrentBanner] = useState(0);
   const featuredProducts = products.slice(0, 8);
 
   useEffect(() => {
-    async function fetchCategories() {
+    async function fetchData() {
       try {
-        const res = await fetch('/api/categories');
-        if (res.ok) {
-          const data = await res.json();
+        const [bannerRes, catRes] = await Promise.all([
+          fetch('/api/banners'),
+          fetch('/api/categories'),
+        ]);
+        if (bannerRes.ok) {
+          const data = await bannerRes.json();
+          if (data.banners && data.banners.length > 0) setBanners(data.banners);
+        }
+        if (catRes.ok) {
+          const data = await catRes.json();
           if (data.categories && data.categories.length > 0) {
             setCategories(data.categories.map(c => ({
               name: c.name,
               slug: c.slug,
               icon: c.icon || '📦',
+              image: c.image || null,
               count: 0,
-              gradient: 'bg-gradient-to-br from-primary-100 to-primary-50',
             })));
           }
         }
-      } catch (err) { /* fallback to default */ }
+      } catch (err) { /* fallback */ }
     }
-    fetchCategories();
+    fetchData();
   }, []);
+
+  // Auto-slide banners
+  useEffect(() => {
+    if (banners.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentBanner((prev) => (prev + 1) % banners.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [banners.length]);
+
+  const nextBanner = () => setCurrentBanner((prev) => (prev + 1) % banners.length);
+  const prevBanner = () => setCurrentBanner((prev) => (prev - 1 + banners.length) % banners.length);
 
   return (
     <div>
-      <HeroSection />
+      {/* Banner / Hero Section */}
+      {banners.length > 0 ? (
+        <section className="relative overflow-hidden bg-gray-900">
+          <div className="relative h-[400px] md:h-[500px]">
+            {banners.map((banner, index) => (
+              <div
+                key={banner.id}
+                className={`absolute inset-0 transition-opacity duration-700 ${
+                  index === currentBanner ? 'opacity-100 z-10' : 'opacity-0 z-0'
+                }`}
+              >
+                {banner.image ? (
+                  <img
+                    src={banner.image}
+                    alt={banner.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-primary-600 to-primary-800" />
+                )}
+                {/* Overlay */}
+                <div className="absolute inset-0 bg-black/40" />
+                {/* Content */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center px-4 max-w-3xl">
+                    <h1 className="text-3xl md:text-5xl font-serif font-bold text-white mb-4 drop-shadow-lg">
+                      {banner.title}
+                    </h1>
+                    {banner.subtitle && (
+                      <p className="text-lg md:text-xl text-white/90 mb-8 drop-shadow">
+                        {banner.subtitle}
+                      </p>
+                    )}
+                    <Link
+                      to={banner.link || '/products'}
+                      className="inline-flex items-center space-x-2 bg-white text-primary-700 px-8 py-3 rounded-lg font-semibold hover:bg-primary-50 transition-colors shadow-lg"
+                    >
+                      <span>{banner.button_text || 'Lihat Selengkapnya'}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
 
-      {/* Categories */}
+            {/* Navigation Arrows */}
+            {banners.length > 1 && (
+              <>
+                <button
+                  onClick={prevBanner}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/40 transition-colors"
+                  aria-label="Banner sebelumnya"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={nextBanner}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/40 transition-colors"
+                  aria-label="Banner selanjutnya"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+                {/* Dots */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+                  {banners.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentBanner(i)}
+                      className={`w-2.5 h-2.5 rounded-full transition-all ${
+                        i === currentBanner ? 'bg-white w-6' : 'bg-white/50'
+                      }`}
+                      aria-label={`Banner ${i + 1}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+      ) : (
+        /* Fallback hero when no banners */
+        <section className="relative bg-gradient-to-br from-primary-50 via-white to-gold-50 py-20 lg:py-28">
+          <div className="max-w-7xl mx-auto px-4 text-center">
+            <h1 className="text-4xl lg:text-6xl font-serif font-bold text-gray-900 leading-tight mb-6">
+              Sewa Busana &amp; <span className="text-primary-600">Dekorasi</span> untuk Hari Istimewa Anda
+            </h1>
+            <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+              Tampil sempurna tanpa harus membeli. Sewa perlengkapan pernikahan premium dengan harga terjangkau.
+            </p>
+            <Link to="/products" className="btn-primary inline-flex items-center space-x-2">
+              <span>Jelajahi Katalog Sewa</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {/* Categories - Clickable Image Cards */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
@@ -43,18 +157,47 @@ export default function HomePage() {
               Kategori Sewa
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Temukan segala kebutuhan pernikahan yang bisa disewa dalam satu tempat
+              Temukan segala kebutuhan pernikahan yang bisa disewa
             </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
             {categories.map((cat) => (
-              <CategoryCard key={cat.slug} category={cat} />
+              <Link
+                key={cat.slug}
+                to={`/products?category=${cat.slug}`}
+                className="group relative overflow-hidden rounded-xl aspect-[4/5] shadow-sm hover:shadow-lg transition-all duration-300"
+              >
+                {/* Image or Gradient Background */}
+                {cat.image ? (
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-primary-100 to-gold-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                    <span className="text-5xl">{cat.icon}</span>
+                  </div>
+                )}
+                {/* Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                {/* Text */}
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <h3 className="font-serif font-semibold text-white text-lg drop-shadow">
+                    {cat.name}
+                  </h3>
+                  <p className="text-white/80 text-sm mt-1 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span>Lihat Koleksi</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </p>
+                </div>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Featured */}
+      {/* Featured Products */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-10">
@@ -90,12 +233,8 @@ export default function HomePage() {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-serif font-bold text-gray-900 mb-3">
-              Cara Sewa
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Mudah dan aman, hanya dalam beberapa langkah
-            </p>
+            <h2 className="text-3xl font-serif font-bold text-gray-900 mb-3">Cara Sewa</h2>
+            <p className="text-gray-600">Mudah dan aman, hanya dalam beberapa langkah</p>
           </div>
           <div className="grid md:grid-cols-4 gap-8">
             {[
@@ -147,8 +286,7 @@ export default function HomePage() {
             Siap Menyewa untuk Hari Istimewa Anda?
           </h2>
           <p className="text-primary-100 mb-8 max-w-2xl mx-auto">
-            Bergabung dengan ribuan pasangan yang telah menyewa perlengkapan pernikahan
-            premium dengan harga terjangkau di BridalNest.
+            Bergabung dengan ribuan pasangan yang telah menyewa perlengkapan pernikahan premium dengan harga terjangkau.
           </p>
           <Link to="/products" className="btn-gold inline-flex items-center space-x-2">
             <span>Mulai Sewa Sekarang</span>

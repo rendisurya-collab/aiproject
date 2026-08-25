@@ -1,5 +1,6 @@
 const express = require('express');
 const { authenticateToken } = require('../middleware/auth');
+const { uploadProduct } = require('../middleware/upload');
 const { getDatabase, saveDatabase } = require('../database/init');
 
 const router = express.Router();
@@ -143,6 +144,25 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     res.json({ message: 'Kategori berhasil dihapus' });
   } catch (err) {
     console.error('Delete category error:', err);
+    res.status(500).json({ message: 'Terjadi kesalahan server' });
+  }
+});
+
+// POST /api/categories/:id/image - Upload category image
+router.post('/:id/image', authenticateToken, uploadProduct.single('image'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'File gambar wajib diunggah' });
+
+    const { id } = req.params;
+    const imagePath = `/uploads/products/${req.file.filename}`;
+    const db = await getDatabase();
+
+    db.run('UPDATE categories SET image = ? WHERE id = ?', [imagePath, parseInt(id)]);
+    saveDatabase();
+
+    res.json({ message: 'Gambar kategori berhasil diunggah', image: imagePath });
+  } catch (err) {
+    console.error('Category image upload error:', err);
     res.status(500).json({ message: 'Terjadi kesalahan server' });
   }
 });
