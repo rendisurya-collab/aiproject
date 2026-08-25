@@ -57,9 +57,10 @@ export default function HomePage() {
         <section className="relative overflow-hidden bg-gray-900">
           <div className="relative h-[400px] md:h-[500px]">
             {banners.map((banner, index) => (
-              <div
+              <Link
                 key={banner.id}
-                className={`absolute inset-0 transition-opacity duration-700 ${
+                to={banner.link || '/products'}
+                className={`absolute inset-0 transition-opacity duration-700 cursor-pointer ${
                   index === currentBanner ? 'opacity-100 z-10' : 'opacity-0 z-0'
                 }`}
               >
@@ -72,11 +73,11 @@ export default function HomePage() {
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-primary-600 to-primary-800" />
                 )}
-                {/* Overlay - lighter when no title */}
+                {/* Overlay */}
                 <div className={`absolute inset-0 ${banner.title ? 'bg-black/30' : 'bg-black/10'}`} />
-                {/* Content - positioned left or right */}
-                {(banner.title || banner.subtitle || banner.button_text) && (
-                  <div className="absolute inset-0 flex items-center">
+                {/* Content text only - no button */}
+                {(banner.title || banner.subtitle) && (
+                  <div className="absolute inset-0 flex items-center pointer-events-none">
                     <div className={`px-6 md:px-16 max-w-xl ${banners.length > 1 ? 'ml-auto mr-8 text-right' : 'ml-8 text-left'}`}>
                       {banner.title && (
                         <h1 className="text-2xl md:text-4xl font-serif font-bold text-white mb-3 drop-shadow-lg">
@@ -84,21 +85,14 @@ export default function HomePage() {
                         </h1>
                       )}
                       {banner.subtitle && (
-                        <p className="text-sm md:text-lg text-white/90 mb-6 drop-shadow">
+                        <p className="text-sm md:text-lg text-white/90 drop-shadow">
                           {banner.subtitle}
                         </p>
                       )}
-                      <Link
-                        to={banner.link || '/products'}
-                        className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-md border border-white/30 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-white/30 transition-colors"
-                      >
-                        <span>{banner.button_text || 'Lihat Selengkapnya'}</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
                     </div>
                   </div>
                 )}
-              </div>
+              </Link>
             ))}
 
             {/* Navigation Arrows - only when more than 1 banner */}
