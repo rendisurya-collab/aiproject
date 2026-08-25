@@ -42,14 +42,13 @@ router.get('/all', authenticateToken, async (req, res) => {
 router.post('/', authenticateToken, uploadProduct.single('image'), async (req, res) => {
   try {
     const { title, subtitle, link, button_text, sort_order } = req.body;
-    if (!title) return res.status(400).json({ message: 'Judul banner wajib diisi' });
 
     const imagePath = req.file ? `/uploads/products/${req.file.filename}` : null;
     const db = await getDatabase();
 
     db.run(
       'INSERT INTO banners (title, subtitle, image, link, button_text, sort_order) VALUES (?,?,?,?,?,?)',
-      [title, subtitle || null, imagePath, link || '/products', button_text || 'Lihat Selengkapnya', sort_order || 0]
+      [title || '', subtitle || null, imagePath, link || '/products', button_text || 'Lihat Selengkapnya', sort_order || 0]
     );
     saveDatabase();
 
@@ -66,7 +65,6 @@ router.put('/:id', authenticateToken, uploadProduct.single('image'), async (req,
   try {
     const { id } = req.params;
     const { title, subtitle, link, button_text, sort_order, is_active } = req.body;
-    if (!title) return res.status(400).json({ message: 'Judul banner wajib diisi' });
 
     const db = await getDatabase();
     const existing = db.exec('SELECT * FROM banners WHERE id = ?', [parseInt(id)]);
@@ -78,7 +76,7 @@ router.put('/:id', authenticateToken, uploadProduct.single('image'), async (req,
 
     db.run(
       'UPDATE banners SET title=?, subtitle=?, image=?, link=?, button_text=?, sort_order=?, is_active=? WHERE id=?',
-      [title, subtitle || null, imagePath, link || '/products', button_text || 'Lihat Selengkapnya', sort_order || 0, is_active !== undefined ? (is_active === 'true' || is_active === '1' ? 1 : 0) : 1, parseInt(id)]
+      [title || '', subtitle || null, imagePath, link || '/products', button_text || 'Lihat Selengkapnya', sort_order || 0, is_active !== undefined ? (is_active === 'true' || is_active === '1' ? 1 : 0) : 1, parseInt(id)]
     );
     saveDatabase();
 

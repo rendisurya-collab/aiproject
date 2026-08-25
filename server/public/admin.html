@@ -475,7 +475,7 @@ function openAddBanner(){
       <div id="bamsg"></div>
       <form onsubmit="doAddBanner(event)" enctype="multipart/form-data">
         <div class="fg"><label>Gambar Banner *</label><input type="file" id="bimg" accept="image/*" required/></div>
-        <div class="fg"><label>Judul *</label><input id="bt" required placeholder="Contoh: Promo Sewa Gaun"/></div>
+        <div class="fg"><label>Judul (opsional)</label><input id="bt" placeholder="Contoh: Promo Sewa Gaun"/></div>
         <div class="fg"><label>Subtitle</label><input id="bs" placeholder="Deskripsi singkat"/></div>
         <div class="row2">
           <div class="fg"><label>Link Tujuan</label><input id="bl" value="/products" placeholder="/products"/></div>
@@ -515,7 +515,7 @@ function openEditBanner(id){
       <form onsubmit="doUpdateBanner(event,${b.id})" enctype="multipart/form-data">
         ${b.image?`<div style="margin-bottom:12px;border-radius:8px;overflow:hidden;height:120px"><img src="${b.image}" style="width:100%;height:100%;object-fit:cover"/></div>`:''}
         <div class="fg"><label>Ganti Gambar (opsional)</label><input type="file" id="beimg" accept="image/*"/></div>
-        <div class="fg"><label>Judul *</label><input id="bet" value="${b.title}" required/></div>
+        <div class="fg"><label>Judul (opsional)</label><input id="bet" value="${b.title||''}"/></div>
         <div class="fg"><label>Subtitle</label><input id="bes" value="${b.subtitle||''}"/></div>
         <div class="row2">
           <div class="fg"><label>Link Tujuan</label><input id="bel" value="${b.link||'/products'}"/></div>
