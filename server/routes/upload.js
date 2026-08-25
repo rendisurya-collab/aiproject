@@ -1,6 +1,6 @@
 const express = require('express');
 const { authenticateToken } = require('../middleware/auth');
-const { uploadProduct } = require('../middleware/upload');
+const { uploadProduct, getImageUrl } = require('../middleware/upload');
 const { getDatabase, saveDatabase } = require('../database/init');
 
 const router = express.Router();
@@ -13,7 +13,7 @@ router.post('/product-image', authenticateToken, uploadProduct.array('images', 5
     }
 
     const images = req.files.map((file, index) => ({
-      path: `/uploads/products/${file.filename}`,
+      path: getImageUrl(file) || `/uploads/products/${file.filename}`,
       filename: file.filename,
       isPrimary: index === 0,
     }));
@@ -65,7 +65,7 @@ router.post('/product', authenticateToken, uploadProduct.array('images', 5), asy
     // Insert product images
     if (req.files && req.files.length > 0) {
       req.files.forEach((file, index) => {
-        const imagePath = `/uploads/products/${file.filename}`;
+        const imagePath = getImageUrl(file) || `/uploads/products/${file.filename}`;
         db.run(
           'INSERT INTO product_images (product_id, image_path, is_primary) VALUES (?, ?, ?)',
           [productId, imagePath, index === 0 ? 1 : 0]
@@ -73,7 +73,7 @@ router.post('/product', authenticateToken, uploadProduct.array('images', 5), asy
       });
 
       // Set first image as product main image
-      const firstImage = `/uploads/products/${req.files[0].filename}`;
+      const firstImage = getImageUrl(req.files[0]) || `/uploads/products/${req.files[0].filename}`;
       db.run('UPDATE products SET image = ? WHERE id = ?', [firstImage, productId]);
     }
 

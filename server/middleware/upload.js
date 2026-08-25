@@ -2,61 +2,65 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Ensure upload directories exist
-const uploadsDir = path.join(__dirname, '..', 'uploads');
-const avatarsDir = path.join(uploadsDir, 'avatars');
-const productsDir = path.join(uploadsDir, 'products');
+// Check if Cloudinary is configured
+const useCloudinary = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
 
-[uploadsDir, avatarsDir, productsDir].forEach((dir) => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-});
+let uploadAvatar, uploadProduct;
 
-// Storage configuration for avatars
-const avatarStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, avatarsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, `avatar-${req.user.id}-${uniqueSuffix}${ext}`);
-  },
-});
+if (useCloudinary) {
+  // Use Cloudinary storage
+  const { uploadProductCloud, uploadAvatarCloud } = require('./cloudinary');
+  uploadAvatar = uploadAvatarCloud;
+  uploadProduct = uploadProductCloud;
+  console.log('Using Cloudinary for image storage');
+} else {
+  // Fallback: local file storage
+  console.log('Using local file storage (Cloudinary not configured)');
 
-// Storage configuration for product images
-const productStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, productsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, `product-${uniqueSuffix}${ext}`);
-  },
-});
+  const uploadsDir = path.join(__dirname, '..', 'uploads');
+  const avatarsDir = path.join(uploadsDir, 'avatars');
+  const productsDir = path.join(uploadsDir, 'products');
 
-// File filter - only allow images
-const imageFilter = (req, file, cb) => {
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Hanya file gambar (JPEG, PNG, GIF, WebP) yang diperbolehkan'), false);
-  }
-};
+  [uploadsDir, avatarsDir, productsDir].forEach((dir) => {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  });
 
-const uploadAvatar = multer({
-  storage: avatarStorage,
-  fileFilter: imageFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-});
+  const avatarStorage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, avatarsDir),
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      cb(null, `avatar-${req.user.id}-${uniqueSuffix}${path.extname(file.originalname)}`);
+    },
+  });
 
-const uploadProduct = multer({
-  storage: productStorage,
-  fileFilter: imageFilter,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
-});
+  const productStorage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, productsDir),
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      cb(null, `product-${uniqueSuffix}${path.extname(file.originalname)}`);
+    },
+  });
 
-module.exports = { uploadAvatar, uploadProduct };
+  const imageFilter = (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) cb(null, true);
+    else cb(new Error('Hanya file gambar (JPEG, PNG, GIF, WebP) yang diperbolehkan'), false);
+  };
+
+  uploadAvatar = multer({ storage: avatarStorage, fileFilter: imageFilter, limits: { fileSize: 5 * 1024 * 1024 } });
+  uploadProduct = multer({ storage: productStorage, fileFilter: imageFilter, limits: { fileSize: 10 * 1024 * 1024 } });
+}
+
+// Helper: get image URL from uploaded file (works for both Cloudinary and local)
+function getImageUrl(file) {
+  if (!file) return null;
+  // Cloudinary returns 'path' as full URL
+  if (file.path && file.path.startsWith('http')) return file.path;
+  // Local storage
+  if (file.filename) return `/uploads/${file.destination.includes('avatars') ? 'avatars' : 'products'}/${file.filename}`;
+  return null;
+}
+
+module.exports = { uploadAvatar, uploadProduct, useCloudinary, getImageUrl };

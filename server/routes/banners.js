@@ -1,6 +1,6 @@
 const express = require('express');
 const { authenticateToken } = require('../middleware/auth');
-const { uploadProduct } = require('../middleware/upload');
+const { uploadProduct, getImageUrl } = require('../middleware/upload');
 const { getDatabase, saveDatabase } = require('../database/init');
 
 const router = express.Router();
@@ -43,7 +43,7 @@ router.post('/', authenticateToken, uploadProduct.single('image'), async (req, r
   try {
     const { title, subtitle, link, button_text, sort_order } = req.body;
 
-    const imagePath = req.file ? `/uploads/products/${req.file.filename}` : null;
+    const imagePath = req.file ? (getImageUrl(req.file) || `/uploads/products/${req.file.filename}`) : null;
     const db = await getDatabase();
 
     db.run(
@@ -72,7 +72,7 @@ router.put('/:id', authenticateToken, uploadProduct.single('image'), async (req,
       return res.status(404).json({ message: 'Banner tidak ditemukan' });
     }
 
-    const imagePath = req.file ? `/uploads/products/${req.file.filename}` : resultToObjects(existing)[0].image;
+    const imagePath = req.file ? (getImageUrl(req.file) || `/uploads/products/${req.file.filename}`) : resultToObjects(existing)[0].image;
 
     db.run(
       'UPDATE banners SET title=?, subtitle=?, image=?, link=?, button_text=?, sort_order=?, is_active=? WHERE id=?',

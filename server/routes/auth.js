@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const { getDatabase, saveDatabase } = require('../database/init');
 const { authenticateToken } = require('../middleware/auth');
 const { uploadAvatar } = require('../middleware/upload');
+const { getImageUrl } = require('../middleware/upload');
 
 const router = express.Router();
 
@@ -246,7 +247,7 @@ router.post('/avatar', authenticateToken, uploadAvatar.single('avatar'), async (
       return res.status(400).json({ message: 'File gambar wajib diunggah' });
     }
 
-    const avatarPath = `/uploads/avatars/${req.file.filename}`;
+    const avatarPath = getImageUrl(req.file) || `/uploads/avatars/${req.file.filename}`;
     const db = await getDatabase();
 
     // Update user avatar

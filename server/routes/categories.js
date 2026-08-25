@@ -1,6 +1,6 @@
 const express = require('express');
 const { authenticateToken } = require('../middleware/auth');
-const { uploadProduct } = require('../middleware/upload');
+const { uploadProduct, getImageUrl } = require('../middleware/upload');
 const { getDatabase, saveDatabase } = require('../database/init');
 
 const router = express.Router();
@@ -154,7 +154,7 @@ router.post('/:id/image', authenticateToken, uploadProduct.single('image'), asyn
     if (!req.file) return res.status(400).json({ message: 'File gambar wajib diunggah' });
 
     const { id } = req.params;
-    const imagePath = `/uploads/products/${req.file.filename}`;
+    const imagePath = getImageUrl(req.file) || `/uploads/products/${req.file.filename}`;
     const db = await getDatabase();
 
     db.run('UPDATE categories SET image = ? WHERE id = ?', [imagePath, parseInt(id)]);
