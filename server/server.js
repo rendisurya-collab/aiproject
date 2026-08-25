@@ -18,7 +18,9 @@ getDatabase();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173'],
+  origin: process.env.NODE_ENV === 'production'
+    ? true
+    : ['http://localhost:3000', 'http://localhost:5173'],
   credentials: true,
 }));
 app.use(express.json());
@@ -67,7 +69,6 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Terjadi kesalahan server' });
 });
 
-app.listen(PORT, () => {
-  console.log(`BridalNest API server running on http://localhost:${PORT}`);
-  console.log(`Uploads served at http://localhost:${PORT}/uploads`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`BridalNest API server running on port ${PORT}`);
 });
