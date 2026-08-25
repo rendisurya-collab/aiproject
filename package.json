@@ -3,14 +3,15 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Virtual & Pre-Loved Bridal Marketplace - E-commerce sewa dan jual-beli busana/dekorasi pernikahan",
+  "description": "Virtual & Pre-Loved Bridal Marketplace - Platform sewa busana/dekorasi pernikahan",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "server": "node --watch server/server.js",
     "server:start": "node server/server.js",
-    "install:server": "cd server && npm install"
+    "railway:build": "npm install && npx vite build && cd server && npm install",
+    "start": "cd server && node server.js"
   },
   "dependencies": {
     "react": "^18.3.1",
