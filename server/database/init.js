@@ -136,6 +136,18 @@ async function initDatabase() {
     });
   }
 
+  // Seed default admin if no users exist
+  const userCount = db.exec('SELECT COUNT(*) FROM users');
+  if (userCount[0].values[0][0] === 0) {
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = bcrypt.hashSync('Rendi1234', 10);
+    db.run(
+      'INSERT INTO users (name, email, password, phone, role) VALUES (?,?,?,?,?)',
+      ['Admin', 'rendisuryahd@gmail.com', hashedPassword, null, 'admin']
+    );
+    console.log('Default admin account created: rendisuryahd@gmail.com');
+  }
+
   saveDatabase();
   console.log('Database tables initialized successfully');
   return db;
