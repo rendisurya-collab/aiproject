@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 const DB_PATH = path.join(__dirname, 'bridalnest.db');
+const CLOUDINARY_DB_PUBLIC_ID = 'bridalnest/backup/database';
 
 let db = null;
 let dbReady = null;
@@ -14,7 +15,55 @@ function getDatabase() {
   return dbReady;
 }
 
+// Download database backup from Cloudinary on startup
+async function downloadDbFromCloud() {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  if (!cloudName) return false;
+
+  try {
+    const url = `https://res.cloudinary.com/${cloudName}/raw/upload/${CLOUDINARY_DB_PUBLIC_ID}.db`;
+    const response = await fetch(url);
+    if (response.ok) {
+      const buffer = Buffer.from(await response.arrayBuffer());
+      fs.writeFileSync(DB_PATH, buffer);
+      console.log('Database restored from Cloudinary backup');
+      return true;
+    }
+  } catch (err) {
+    console.log('No cloud backup found, creating fresh database');
+  }
+  return false;
+}
+
+// Upload database backup to Cloudinary
+async function backupDbToCloud() {
+  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) return;
+
+  try {
+    const cloudinary = require('cloudinary').v2;
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
+
+    await cloudinary.uploader.upload(DB_PATH, {
+      resource_type: 'raw',
+      public_id: CLOUDINARY_DB_PUBLIC_ID,
+      overwrite: true,
+    });
+    console.log('Database backed up to Cloudinary');
+  } catch (err) {
+    console.error('Database backup failed:', err.message);
+  }
+}
+
 async function initDatabase() {
+  // Try to restore from Cloudinary first
+  if (!fs.existsSync(DB_PATH)) {
+    await downloadDbFromCloud();
+  }
+
   const SQL = await initSqlJs();
 
   // Load existing database or create new one
@@ -96,6 +145,7 @@ async function initDatabase() {
       slug TEXT UNIQUE NOT NULL,
       icon TEXT DEFAULT '📦',
       description TEXT,
+      image TEXT,
       sort_order INTEGER DEFAULT 0,
       is_active INTEGER DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -109,7 +159,7 @@ async function initDatabase() {
   db.run(`
     CREATE TABLE IF NOT EXISTS banners (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
+      title TEXT,
       subtitle TEXT,
       image TEXT,
       link TEXT DEFAULT '/products',
@@ -159,6 +209,16 @@ function saveDatabase() {
     const buffer = Buffer.from(data);
     fs.writeFileSync(DB_PATH, buffer);
   }
+  // Auto backup to Cloudinary (debounced)
+  scheduleBackup();
+}
+
+let backupTimer = null;
+function scheduleBackup() {
+  if (backupTimer) clearTimeout(backupTimer);
+  backupTimer = setTimeout(() => {
+    backupDbToCloud();
+  }, 5000); // Backup 5 seconds after last save
 }
 
 module.exports = { getDatabase, saveDatabase };
