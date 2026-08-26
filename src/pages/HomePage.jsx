@@ -131,7 +131,7 @@ export default function HomePage() {
         </section>
       ) : (
         /* Fallback hero when no banners */
-        <section className="relative bg-gradient-to-br from-primary-50 via-white to-gold-50 py-20 lg:py-28">
+        <section className="relative py-20 lg:py-28">
           <div className="max-w-7xl mx-auto px-4 text-center">
             <h1 className="text-4xl lg:text-6xl font-serif font-bold text-gray-900 leading-tight mb-6">
               Sewa Busana &amp; <span className="text-primary-600">Dekorasi</span> untuk Hari Istimewa Anda
@@ -148,7 +148,7 @@ export default function HomePage() {
       )}
 
       {/* Categories - Clickable Image Cards */}
-      <section className="py-16 bg-white/70 backdrop-blur-sm">
+      <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-serif font-bold text-gray-900 mb-3">
@@ -196,7 +196,7 @@ export default function HomePage() {
       </section>
 
       {/* Featured Products */}
-      <section className="py-16 bg-blue-50/50">
+      <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-10">
             <div>
@@ -228,7 +228,7 @@ export default function HomePage() {
       </section>
 
       {/* How it works */}
-      <section className="py-16 bg-white/70 backdrop-blur-sm">
+      <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-serif font-bold text-gray-900 mb-3">Cara Sewa</h2>
@@ -254,7 +254,7 @@ export default function HomePage() {
       </section>
 
       {/* Trust */}
-      <section className="py-12 bg-sky-50/80">
+      <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {[
