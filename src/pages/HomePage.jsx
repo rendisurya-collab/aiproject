@@ -148,7 +148,7 @@ export default function HomePage() {
       )}
 
       {/* Categories - Clickable Image Cards */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-white/70 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-serif font-bold text-gray-900 mb-3">
@@ -196,7 +196,7 @@ export default function HomePage() {
       </section>
 
       {/* Featured Products */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-16 bg-blue-50/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-10">
             <div>
@@ -228,7 +228,7 @@ export default function HomePage() {
       </section>
 
       {/* How it works */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-white/70 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-serif font-bold text-gray-900 mb-3">Cara Sewa</h2>
@@ -254,7 +254,7 @@ export default function HomePage() {
       </section>
 
       {/* Trust */}
-      <section className="py-12 bg-primary-50">
+      <section className="py-12 bg-sky-50/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {[

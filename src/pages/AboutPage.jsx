@@ -117,7 +117,7 @@ export default function AboutPage() {
 
       {/* Values */}
       {values.length > 0 && (
-        <section className="py-16 bg-gray-50">
+        <section className="py-16 bg-blue-50/50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-serif font-bold text-gray-900 mb-3">Nilai Kami</h2>
@@ -161,7 +161,7 @@ export default function AboutPage() {
 
       {/* CTA */}
       {s.about_cta_title && (
-        <section className="py-16 bg-gray-50">
+        <section className="py-16 bg-sky-50/60">
           <div className="max-w-4xl mx-auto px-4 text-center">
             <Users className="w-12 h-12 text-primary-600 mx-auto mb-4" />
             <h2 className="text-3xl font-serif font-bold text-gray-900 mb-4">
