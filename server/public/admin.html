@@ -154,6 +154,7 @@ function dashHTML(){return `
     <button class="tab ${tab==='upload'?'active':''}" onclick="switchTab('upload')">➕ Unggah Produk</button>
     <button class="tab ${tab==='categories'?'active':''}" onclick="switchTab('categories')">🏷️ Kategori</button>
     <button class="tab ${tab==='banners'?'active':''}" onclick="switchTab('banners')">🖼️ Banner</button>
+    <button class="tab ${tab==='about'?'active':''}" onclick="switchTab('about')">📄 Tentang</button>
   </div>
   <div id="content"></div>
 </div>
@@ -167,10 +168,11 @@ function renderContent(){
   else if(tab==='upload')c.innerHTML=uploadHTML();
   else if(tab==='categories')c.innerHTML=catHTML();
   else if(tab==='banners')c.innerHTML=bannerHTML();
+  else if(tab==='about')c.innerHTML=aboutHTML();
   if(tab==='upload')setupDrop();
 }
 
-async function loadAll(){await Promise.all([loadProducts(),loadCategories(),loadBanners()]); renderContent()}
+async function loadAll(){await Promise.all([loadProducts(),loadCategories(),loadBanners(),loadAboutSettings()]); renderContent()}
 
 // ===== PRODUCTS =====
 async function loadProducts(){
@@ -564,6 +566,122 @@ async function uploadCatImage(catId){
     if(r.ok){await loadCategories();renderContent()}
     else{const d=await r.json();alert(d.message||'Gagal upload')}
   }catch(e){alert('Gagal upload gambar')}
+}
+
+// ===== ABOUT PAGE SETTINGS =====
+let aboutSettings={};
+
+async function loadAboutSettings(){
+  try{const r=await fetch(API+'/api/settings/about');if(r.ok){const d=await r.json();aboutSettings=d.settings||{}}}catch(e){}
+}
+
+function aboutHTML(){
+  const s=aboutSettings;
+  return `
+<div class="card">
+  <h2 style="font-size:1rem;margin-bottom:16px">📄 Kelola Halaman Tentang Kami</h2>
+  <div id="amsg"></div>
+  <form onsubmit="saveAboutSettings(event)">
+    <h3 style="font-size:.85rem;font-weight:700;color:#16a34a;margin-bottom:10px;margin-top:8px">🏷️ Header</h3>
+    <div class="fg"><label>Judul Halaman</label><input id="a_title" value="${s.about_title||''}" placeholder="Platform Sewa Pernikahan yang Terpercaya"/></div>
+    <div class="fg"><label>Subtitle</label><textarea id="a_subtitle" rows="2" placeholder="Deskripsi singkat...">${s.about_subtitle||''}</textarea></div>
+
+    <h3 style="font-size:.85rem;font-weight:700;color:#16a34a;margin-bottom:10px;margin-top:18px">📖 Cerita Kami</h3>
+    <div class="fg"><label>Judul Cerita</label><input id="a_story_title" value="${s.about_story_title||''}" placeholder="Cerita Kami"/></div>
+    <div class="fg"><label>Paragraf 1</label><textarea id="a_story_1" rows="3">${s.about_story_1||''}</textarea></div>
+    <div class="fg"><label>Paragraf 2</label><textarea id="a_story_2" rows="3">${s.about_story_2||''}</textarea></div>
+    <div class="fg"><label>Paragraf 3</label><textarea id="a_story_3" rows="3">${s.about_story_3||''}</textarea></div>
+    <div class="fg"><label>Quote / Tagline</label><input id="a_quote" value="${s.about_quote||''}" placeholder="Sewa Elegan, Tampil Memukau"/></div>
+
+    <h3 style="font-size:.85rem;font-weight:700;color:#16a34a;margin-bottom:10px;margin-top:18px">⭐ Nilai-Nilai</h3>
+    <div class="row2">
+      <div class="fg"><label>Nilai 1 - Judul</label><input id="a_v1t" value="${s.about_value_1_title||''}"/></div>
+      <div class="fg"><label>Nilai 1 - Deskripsi</label><input id="a_v1d" value="${s.about_value_1_desc||''}"/></div>
+    </div>
+    <div class="row2">
+      <div class="fg"><label>Nilai 2 - Judul</label><input id="a_v2t" value="${s.about_value_2_title||''}"/></div>
+      <div class="fg"><label>Nilai 2 - Deskripsi</label><input id="a_v2d" value="${s.about_value_2_desc||''}"/></div>
+    </div>
+    <div class="row2">
+      <div class="fg"><label>Nilai 3 - Judul</label><input id="a_v3t" value="${s.about_value_3_title||''}"/></div>
+      <div class="fg"><label>Nilai 3 - Deskripsi</label><input id="a_v3d" value="${s.about_value_3_desc||''}"/></div>
+    </div>
+
+    <h3 style="font-size:.85rem;font-weight:700;color:#16a34a;margin-bottom:10px;margin-top:18px">📊 Statistik</h3>
+    <div class="row2">
+      <div class="fg"><label>Stat 1 (angka)</label><input id="a_s1" value="${s.about_stat_1||''}" placeholder="500+"/></div>
+      <div class="fg"><label>Stat 1 (label)</label><input id="a_s1l" value="${s.about_stat_1_label||''}" placeholder="Produk Sewa"/></div>
+    </div>
+    <div class="row2">
+      <div class="fg"><label>Stat 2 (angka)</label><input id="a_s2" value="${s.about_stat_2||''}"/></div>
+      <div class="fg"><label>Stat 2 (label)</label><input id="a_s2l" value="${s.about_stat_2_label||''}"/></div>
+    </div>
+    <div class="row2">
+      <div class="fg"><label>Stat 3 (angka)</label><input id="a_s3" value="${s.about_stat_3||''}"/></div>
+      <div class="fg"><label>Stat 3 (label)</label><input id="a_s3l" value="${s.about_stat_3_label||''}"/></div>
+    </div>
+    <div class="row2">
+      <div class="fg"><label>Stat 4 (angka)</label><input id="a_s4" value="${s.about_stat_4||''}"/></div>
+      <div class="fg"><label>Stat 4 (label)</label><input id="a_s4l" value="${s.about_stat_4_label||''}"/></div>
+    </div>
+
+    <h3 style="font-size:.85rem;font-weight:700;color:#16a34a;margin-bottom:10px;margin-top:18px">📢 CTA (Call to Action)</h3>
+    <div class="fg"><label>Judul CTA</label><input id="a_cta_title" value="${s.about_cta_title||''}"/></div>
+    <div class="fg"><label>Deskripsi CTA</label><textarea id="a_cta_desc" rows="2">${s.about_cta_desc||''}</textarea></div>
+
+    <h3 style="font-size:.85rem;font-weight:700;color:#16a34a;margin-bottom:10px;margin-top:18px">🖼️ Gambar</h3>
+    ${s.about_image?`<div style="margin-bottom:10px;border-radius:8px;overflow:hidden;height:120px;width:200px"><img src="${s.about_image}" style="width:100%;height:100%;object-fit:cover"/></div>`:''}
+    <div class="fg"><label>Upload / Ganti Gambar About</label><input type="file" id="a_img" accept="image/*" onchange="uploadAboutImage()"/></div>
+
+    <button class="btn btn-p" id="abtn" style="margin-top:12px">💾 Simpan Semua Perubahan</button>
+  </form>
+</div>`}
+
+async function saveAboutSettings(e){
+  e.preventDefault();
+  const b=document.getElementById('abtn');b.disabled=true;b.textContent='Menyimpan...';
+  const settings={
+    about_title:document.getElementById('a_title').value,
+    about_subtitle:document.getElementById('a_subtitle').value,
+    about_story_title:document.getElementById('a_story_title').value,
+    about_story_1:document.getElementById('a_story_1').value,
+    about_story_2:document.getElementById('a_story_2').value,
+    about_story_3:document.getElementById('a_story_3').value,
+    about_quote:document.getElementById('a_quote').value,
+    about_value_1_title:document.getElementById('a_v1t').value,
+    about_value_1_desc:document.getElementById('a_v1d').value,
+    about_value_2_title:document.getElementById('a_v2t').value,
+    about_value_2_desc:document.getElementById('a_v2d').value,
+    about_value_3_title:document.getElementById('a_v3t').value,
+    about_value_3_desc:document.getElementById('a_v3d').value,
+    about_stat_1:document.getElementById('a_s1').value,
+    about_stat_1_label:document.getElementById('a_s1l').value,
+    about_stat_2:document.getElementById('a_s2').value,
+    about_stat_2_label:document.getElementById('a_s2l').value,
+    about_stat_3:document.getElementById('a_s3').value,
+    about_stat_3_label:document.getElementById('a_s3l').value,
+    about_stat_4:document.getElementById('a_s4').value,
+    about_stat_4_label:document.getElementById('a_s4l').value,
+    about_cta_title:document.getElementById('a_cta_title').value,
+    about_cta_desc:document.getElementById('a_cta_desc').value,
+  };
+  try{
+    const r=await fetch(API+'/api/settings',{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({settings})});
+    const d=await r.json();
+    if(r.ok){document.getElementById('amsg').innerHTML='<div class="alert alert-s">✅ Settings berhasil disimpan!</div>';await loadAboutSettings()}
+    else{document.getElementById('amsg').innerHTML=`<div class="alert alert-e">${d.message}</div>`}
+  }catch(er){document.getElementById('amsg').innerHTML='<div class="alert alert-e">Gagal menyimpan</div>'}
+  b.disabled=false;b.textContent='💾 Simpan Semua Perubahan';
+}
+
+async function uploadAboutImage(){
+  const file=document.getElementById('a_img').files[0];if(!file)return;
+  const fd=new FormData();fd.append('image',file);
+  try{
+    const r=await fetch(API+'/api/settings/about-image',{method:'POST',headers:{'Authorization':'Bearer '+token},body:fd});
+    if(r.ok){await loadAboutSettings();renderContent()}
+    else{alert('Gagal upload gambar')}
+  }catch(e){alert('Gagal upload')}
 }
 
 // ===== INIT =====
