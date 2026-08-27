@@ -11,7 +11,7 @@
     "server": "node --watch server/server.js",
     "server:start": "node server/server.js",
     "railway:build": "npm install && npx vite build && cd server && npm install",
-    "start": "cd server && node server.js"
+    "start": "node server/server.js"
   },
   "dependencies": {
     "react": "^18.3.1",
