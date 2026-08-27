@@ -203,6 +203,39 @@ async function initDatabase() {
   `);
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS booking_fields (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      field_name TEXT NOT NULL,
+      field_label TEXT NOT NULL,
+      field_type TEXT DEFAULT 'text',
+      placeholder TEXT,
+      is_required INTEGER DEFAULT 0,
+      options TEXT,
+      sort_order INTEGER DEFAULT 0,
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS bookings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      product_id INTEGER,
+      product_name TEXT,
+      status TEXT DEFAULT 'pending',
+      form_data TEXT,
+      total_price INTEGER,
+      start_date TEXT,
+      end_date TEXT,
+      rental_days INTEGER,
+      notes TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS videos (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT,
@@ -261,6 +294,24 @@ async function initDatabase() {
     ];
     defaults.forEach(([key, value]) => {
       db.run('INSERT INTO site_settings (setting_key, setting_value) VALUES (?,?)', [key, value]);
+    });
+  }
+
+  // Seed default booking fields
+  const fieldCount = db.exec('SELECT COUNT(*) FROM booking_fields');
+  if (fieldCount[0].values[0][0] === 0) {
+    const defaultFields = [
+      ['nama_lengkap', 'Nama Lengkap', 'text', 'Masukkan nama lengkap', 1, null, 1],
+      ['no_telepon', 'No. Telepon / WhatsApp', 'tel', '08xx-xxxx-xxxx', 1, null, 2],
+      ['email', 'Email', 'email', 'contoh@email.com', 0, null, 3],
+      ['alamat', 'Alamat Lengkap', 'textarea', 'Alamat pengiriman/pengambilan', 1, null, 4],
+      ['tanggal_acara', 'Tanggal Acara', 'date', '', 1, null, 5],
+      ['jenis_acara', 'Jenis Acara', 'select', '', 0, 'Akad Nikah,Resepsi,Pre-Wedding,Lamaran,Lainnya', 6],
+      ['catatan', 'Catatan Tambahan', 'textarea', 'Catatan khusus untuk penyewaan', 0, null, 7],
+    ];
+    defaultFields.forEach(([name, label, type, placeholder, required, options, order]) => {
+      db.run('INSERT INTO booking_fields (field_name, field_label, field_type, placeholder, is_required, options, sort_order) VALUES (?,?,?,?,?,?,?)',
+        [name, label, type, placeholder, required, options, order]);
     });
   }
 

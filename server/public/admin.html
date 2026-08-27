@@ -155,6 +155,8 @@ function dashHTML(){return `
     <button class="tab ${tab==='categories'?'active':''}" onclick="switchTab('categories')">🏷️ Kategori</button>
     <button class="tab ${tab==='banners'?'active':''}" onclick="switchTab('banners')">🖼️ Banner</button>
     <button class="tab ${tab==='videos'?'active':''}" onclick="switchTab('videos')">🎬 Video</button>
+    <button class="tab ${tab==='bookingfields'?'active':''}" onclick="switchTab('bookingfields')">📋 Form Booking</button>
+    <button class="tab ${tab==='bookings'?'active':''}" onclick="switchTab('bookings')">📑 Data Booking</button>
     <button class="tab ${tab==='about'?'active':''}" onclick="switchTab('about')">📄 Tentang</button>
   </div>
   <div id="content"></div>
@@ -170,11 +172,13 @@ function renderContent(){
   else if(tab==='categories')c.innerHTML=catHTML();
   else if(tab==='banners')c.innerHTML=bannerHTML();
   else if(tab==='videos')c.innerHTML=videoHTML();
+  else if(tab==='bookingfields')c.innerHTML=bookingFieldsHTML();
+  else if(tab==='bookings')c.innerHTML=bookingsHTML();
   else if(tab==='about')c.innerHTML=aboutHTML();
   if(tab==='upload')setupDrop();
 }
 
-async function loadAll(){await Promise.all([loadProducts(),loadCategories(),loadBanners(),loadVideos(),loadAboutSettings()]); renderContent()}
+async function loadAll(){await Promise.all([loadProducts(),loadCategories(),loadBanners(),loadVideos(),loadBookingFields(),loadBookings(),loadAboutSettings()]); renderContent()}
 
 // ===== PRODUCTS =====
 async function loadProducts(){
@@ -729,6 +733,173 @@ async function doUpdateVideo(e,id){
 async function doDeleteVideo(id){
   if(!confirm('Yakin hapus video ini?'))return;
   try{const r=await fetch(API+'/api/videos/'+id,{method:'DELETE',headers:{'Authorization':'Bearer '+token}});if(r.ok){await loadVideos();renderContent()}}catch(e){}
+}
+
+// ===== BOOKING FIELDS & BOOKINGS =====
+let bookingFields=[];
+let bookingsData=[];
+
+async function loadBookingFields(){
+  try{const r=await fetch(API+'/api/bookings/fields/all',{headers:{'Authorization':'Bearer '+token}});if(r.ok){const d=await r.json();bookingFields=d.fields||[]}}catch(e){}
+}
+async function loadBookings(){
+  try{const r=await fetch(API+'/api/bookings',{headers:{'Authorization':'Bearer '+token}});if(r.ok){const d=await r.json();bookingsData=d.bookings||[]}}catch(e){}
+}
+
+function bookingFieldsHTML(){
+  const typeLabels={text:'Teks',email:'Email',tel:'Telepon',date:'Tanggal',textarea:'Textarea',select:'Dropdown',number:'Angka'};
+  return `
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <h2 style="font-size:1rem">📋 Kelola Kolom Form Booking</h2>
+    <button class="btn btn-p btn-sm" onclick="openAddField()">➕ Tambah Kolom</button>
+  </div>
+  <p style="font-size:.7rem;color:#888;margin-bottom:14px">Atur kolom-kolom yang muncul di form booking customer. Bisa ditambah, diubah, dihapus, atau dinonaktifkan.</p>
+  ${bookingFields.length?`
+  <table>
+    <thead><tr><th>Label</th><th>Nama Field</th><th>Tipe</th><th>Wajib</th><th>Status</th><th>Aksi</th></tr></thead>
+    <tbody>${bookingFields.map(f=>`
+      <tr>
+        <td><b>${f.field_label}</b></td>
+        <td><code style="font-size:.7rem;background:#f3f4f6;padding:2px 6px;border-radius:4px">${f.field_name}</code></td>
+        <td>${typeLabels[f.field_type]||f.field_type}</td>
+        <td>${f.is_required?'✅':'—'}</td>
+        <td><span class="${f.is_active?'status-active':'status-inactive'}">${f.is_active?'Aktif':'Nonaktif'}</span></td>
+        <td><button class="btn btn-s btn-sm" onclick="openEditField(${f.id})">✏️</button> <button class="btn btn-d btn-sm" onclick="doDeleteField(${f.id})">🗑️</button></td>
+      </tr>`).join('')}</tbody>
+  </table>`:'<div class="empty"><p>Belum ada kolom form</p></div>'}
+</div>`}
+
+function openAddField(){
+  document.getElementById('modal').innerHTML=`
+  <div class="modal-bg" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h2>➕ Tambah Kolom Form</h2>
+      <div id="fmsg"></div>
+      <form onsubmit="doAddField(event)">
+        <div class="row2">
+          <div class="fg"><label>Label *</label><input id="fl" required placeholder="Contoh: Nama Lengkap"/></div>
+          <div class="fg"><label>Nama Field *</label><input id="fn" required placeholder="nama_lengkap"/></div>
+        </div>
+        <div class="row2">
+          <div class="fg"><label>Tipe</label><select id="ft"><option value="text">Teks</option><option value="email">Email</option><option value="tel">Telepon</option><option value="number">Angka</option><option value="date">Tanggal</option><option value="textarea">Textarea</option><option value="select">Dropdown</option></select></div>
+          <div class="fg"><label>Urutan</label><input type="number" id="fo" value="0"/></div>
+        </div>
+        <div class="fg"><label>Placeholder</label><input id="fp" placeholder="Teks placeholder"/></div>
+        <div class="fg"><label>Opsi (untuk Dropdown, pisah koma)</label><input id="fop" placeholder="Opsi 1,Opsi 2,Opsi 3"/></div>
+        <div class="fg"><label><input type="checkbox" id="fr"/> Wajib diisi</label></div>
+        <div class="modal-acts"><button type="button" class="btn btn-s" onclick="closeModal()">Batal</button><button class="btn btn-p">💾 Simpan</button></div>
+      </form>
+    </div>
+  </div>`;
+  document.getElementById('fl').addEventListener('input',e=>{document.getElementById('fn').value=e.target.value.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'')});
+}
+
+async function doAddField(e){
+  e.preventDefault();
+  const body={field_name:document.getElementById('fn').value,field_label:document.getElementById('fl').value,field_type:document.getElementById('ft').value,placeholder:document.getElementById('fp').value,options:document.getElementById('fop').value,is_required:document.getElementById('fr').checked,sort_order:parseInt(document.getElementById('fo').value)};
+  try{const r=await fetch(API+'/api/bookings/fields',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body)});if(r.ok){closeModal();await loadBookingFields();renderContent()}else{const d=await r.json();document.getElementById('fmsg').innerHTML=`<div class="alert alert-e">${d.message}</div>`}}catch(er){}
+}
+
+function openEditField(id){
+  const f=bookingFields.find(x=>x.id===id);if(!f)return;
+  document.getElementById('modal').innerHTML=`
+  <div class="modal-bg" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h2>✏️ Edit Kolom</h2>
+      <form onsubmit="doUpdateField(event,${f.id})">
+        <div class="row2">
+          <div class="fg"><label>Label *</label><input id="efl" value="${f.field_label}" required/></div>
+          <div class="fg"><label>Nama Field *</label><input id="efn" value="${f.field_name}" required/></div>
+        </div>
+        <div class="row2">
+          <div class="fg"><label>Tipe</label><select id="eft">${['text','email','tel','number','date','textarea','select'].map(t=>`<option value="${t}" ${f.field_type===t?'selected':''}>${t}</option>`).join('')}</select></div>
+          <div class="fg"><label>Urutan</label><input type="number" id="efo" value="${f.sort_order||0}"/></div>
+        </div>
+        <div class="fg"><label>Placeholder</label><input id="efp" value="${f.placeholder||''}"/></div>
+        <div class="fg"><label>Opsi Dropdown</label><input id="efop" value="${f.options||''}"/></div>
+        <div class="row2">
+          <div class="fg"><label><input type="checkbox" id="efr" ${f.is_required?'checked':''}/> Wajib diisi</label></div>
+          <div class="fg"><label>Status</label><select id="efa"><option value="1" ${f.is_active?'selected':''}>Aktif</option><option value="0" ${!f.is_active?'selected':''}>Nonaktif</option></select></div>
+        </div>
+        <div class="modal-acts"><button type="button" class="btn btn-s" onclick="closeModal()">Batal</button><button class="btn btn-p">💾 Simpan</button></div>
+      </form>
+    </div>
+  </div>`;
+}
+
+async function doUpdateField(e,id){
+  e.preventDefault();
+  const body={field_name:document.getElementById('efn').value,field_label:document.getElementById('efl').value,field_type:document.getElementById('eft').value,placeholder:document.getElementById('efp').value,options:document.getElementById('efop').value,is_required:document.getElementById('efr').checked,sort_order:parseInt(document.getElementById('efo').value),is_active:document.getElementById('efa').value==='1'};
+  try{const r=await fetch(API+'/api/bookings/fields/'+id,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body)});if(r.ok){closeModal();await loadBookingFields();renderContent()}}catch(er){}
+}
+
+async function doDeleteField(id){
+  if(!confirm('Yakin hapus kolom ini?'))return;
+  try{const r=await fetch(API+'/api/bookings/fields/'+id,{method:'DELETE',headers:{'Authorization':'Bearer '+token}});if(r.ok){await loadBookingFields();renderContent()}}catch(e){}
+}
+
+function bookingsHTML(){
+  const statusColors={pending:'#f59e0b',confirmed:'#16a34a',completed:'#3b82f6',cancelled:'#ef4444'};
+  const statusLabels={pending:'Menunggu',confirmed:'Dikonfirmasi',completed:'Selesai',cancelled:'Dibatalkan'};
+  return `
+<div class="card">
+  <h2 style="font-size:1rem;margin-bottom:16px">📑 Data Booking Masuk</h2>
+  ${bookingsData.length?`
+  <p style="font-size:.75rem;color:#888;margin-bottom:12px">${bookingsData.length} booking</p>
+  <table>
+    <thead><tr><th>Tanggal</th><th>Produk</th><th>Customer</th><th>Durasi</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
+    <tbody>${bookingsData.map(b=>{
+      const fd=b.form_data||{};
+      const name=fd.nama_lengkap||fd.nama||'-';
+      const phone=fd.no_telepon||fd.telepon||'';
+      return `
+      <tr>
+        <td style="font-size:.7rem">${b.created_at?new Date(b.created_at).toLocaleDateString('id-ID'):'—'}</td>
+        <td><b style="font-size:.75rem">${b.product_name||'-'}</b></td>
+        <td><span style="font-size:.75rem">${name}</span>${phone?`<br/><span style="font-size:.65rem;color:#888">${phone}</span>`:''}</td>
+        <td>${b.rental_days||'-'} hari</td>
+        <td style="font-size:.75rem;font-weight:700;color:#16a34a">${b.total_price?fmt(b.total_price):'-'}</td>
+        <td><span style="color:${statusColors[b.status]||'#888'};font-size:.7rem;font-weight:600">${statusLabels[b.status]||b.status}</span></td>
+        <td>
+          <button class="btn btn-s btn-sm" onclick="openBookingDetail(${b.id})">👁️</button>
+          <button class="btn btn-d btn-sm" onclick="doDeleteBooking(${b.id})">🗑️</button>
+        </td>
+      </tr>`}).join('')}</tbody>
+  </table>`:'<div class="empty"><p style="font-size:2rem">📑</p><p>Belum ada booking masuk.</p></div>'}
+</div>`}
+
+function openBookingDetail(id){
+  const b=bookingsData.find(x=>x.id===id);if(!b)return;
+  const fd=b.form_data||{};
+  document.getElementById('modal').innerHTML=`
+  <div class="modal-bg" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h2>📑 Detail Booking #${b.id}</h2>
+      <div style="margin-bottom:14px">
+        <p style="font-size:.8rem;color:#888">Produk: <b>${b.product_name||'-'}</b></p>
+        <p style="font-size:.8rem;color:#888">Tanggal Sewa: ${b.start_date||'-'} s/d ${b.end_date||'-'} (${b.rental_days||0} hari)</p>
+        <p style="font-size:.8rem;color:#888">Total: <b style="color:#16a34a">${b.total_price?fmt(b.total_price):'-'}</b></p>
+      </div>
+      <h3 style="font-size:.85rem;margin-bottom:8px">Data Customer:</h3>
+      <table>${Object.entries(fd).map(([k,v])=>`<tr><td style="font-size:.75rem;color:#666;padding:4px 8px">${k.replace(/_/g,' ')}</td><td style="font-size:.75rem;padding:4px 8px"><b>${v}</b></td></tr>`).join('')}</table>
+      ${b.notes?`<p style="font-size:.75rem;color:#888;margin-top:10px">Catatan: ${b.notes}</p>`:''}
+      <h3 style="font-size:.85rem;margin-top:14px;margin-bottom:8px">Update Status:</h3>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${['pending','confirmed','completed','cancelled'].map(s=>`<button class="btn ${b.status===s?'btn-p':'btn-s'} btn-sm" onclick="updateBookingStatus(${b.id},'${s}')">${s==='pending'?'Menunggu':s==='confirmed'?'Konfirmasi':s==='completed'?'Selesai':'Batal'}</button>`).join('')}
+      </div>
+      <div class="modal-acts" style="margin-top:16px"><button class="btn btn-s" onclick="closeModal()">Tutup</button></div>
+    </div>
+  </div>`;
+}
+
+async function updateBookingStatus(id,status){
+  try{const r=await fetch(API+'/api/bookings/'+id+'/status',{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({status})});if(r.ok){await loadBookings();closeModal()}}catch(e){}
+}
+
+async function doDeleteBooking(id){
+  if(!confirm('Yakin hapus data booking ini?'))return;
+  try{const r=await fetch(API+'/api/bookings/'+id,{method:'DELETE',headers:{'Authorization':'Bearer '+token}});if(r.ok){await loadBookings();renderContent()}}catch(e){}
 }
 
 // ===== ABOUT PAGE SETTINGS =====
