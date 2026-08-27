@@ -15,7 +15,6 @@ function getDatabase() {
   return dbReady;
 }
 
-// Download database backup from Cloudinary on startup
 async function downloadDbFromCloud() {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   if (!cloudName) return false;
@@ -24,33 +23,36 @@ async function downloadDbFromCloud() {
     const url = `https://res.cloudinary.com/${cloudName}/raw/upload/${CLOUDINARY_DB_PUBLIC_ID}`;
     console.log('Trying to restore database from Cloudinary...');
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+    const timeout = setTimeout(() => controller.abort(), 10000);
     const response = await fetch(url, { signal: controller.signal });
     clearTimeout(timeout);
     if (response.ok) {
       const contentType = response.headers.get('content-type') || '';
-      // Make sure we got actual file data, not an HTML error page
       if (!contentType.includes('html')) {
         const buffer = Buffer.from(await response.arrayBuffer());
-        if (buffer.length > 100) { // Valid SQLite DB should be > 100 bytes
+        if (buffer.length > 100) {
           fs.writeFileSync(DB_PATH, buffer);
-          console.log('Database restored from Cloudinary backup (' + buffer.length + ' bytes)');
+          console.log('Database restored from Cloudinary (' + buffer.length + ' bytes)');
           return true;
         }
       }
-      console.log('Cloud response was not a valid database file');
-    } else {
-      console.log('Cloud backup not found (status:', response.status, ')');
     }
+    console.log('No valid cloud backup found');
   } catch (err) {
-    console.log('Could not restore from cloud (this is OK for first deploy):', err.message);
+    console.log('Cloud restore skipped:', err.message);
   }
   return false;
 }
 
-// Upload database backup to Cloudinary
 async function backupDbToCloud() {
-  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) return;
+  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+    console.log('Cloudinary not configured, skipping backup');
+    return { success: false, message: 'Cloudinary not configured' };
+  }
+
+  if (!fs.existsSync(DB_PATH)) {
+    return { success: false, message: 'Database file not found' };
+  }
 
   try {
     const cloudinary = require('cloudinary').v2;
@@ -67,20 +69,21 @@ async function backupDbToCloud() {
       invalidate: true,
     });
     console.log('Database backed up to Cloudinary:', result.secure_url);
+    return { success: true, url: result.secure_url };
   } catch (err) {
     console.error('Database backup failed:', err.message);
+    return { success: false, message: err.message };
   }
 }
 
 async function initDatabase() {
-  // Try to restore from Cloudinary first
+  // Try to restore from cloud if no local DB exists
   if (!fs.existsSync(DB_PATH)) {
     await downloadDbFromCloud();
   }
 
   const SQL = await initSqlJs();
 
-  // Load existing database or create new one
   if (fs.existsSync(DB_PATH)) {
     const fileBuffer = fs.readFileSync(DB_PATH);
     db = new SQL.Database(fileBuffer);
@@ -88,11 +91,9 @@ async function initDatabase() {
     db = new SQL.Database();
   }
 
-  // Enable WAL mode equivalent
   db.run('PRAGMA journal_mode = WAL;');
   db.run('PRAGMA foreign_keys = ON;');
 
-  // Create tables
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -166,10 +167,8 @@ async function initDatabase() {
     )
   `);
 
-  // Add image column to categories if not exists
   try { db.run('ALTER TABLE categories ADD COLUMN image TEXT'); } catch(e) {}
 
-  // Banners table
   db.run(`
     CREATE TABLE IF NOT EXISTS banners (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -184,7 +183,6 @@ async function initDatabase() {
     )
   `);
 
-  // Site settings table (key-value store for about page, etc.)
   db.run(`
     CREATE TABLE IF NOT EXISTS site_settings (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -194,41 +192,7 @@ async function initDatabase() {
     )
   `);
 
-  // Seed default about page settings if empty
-  const settingsCount = db.exec('SELECT COUNT(*) FROM site_settings');
-  if (settingsCount[0].values[0][0] === 0) {
-    const defaults = [
-      ['about_title', 'Platform Sewa Pernikahan yang Terpercaya'],
-      ['about_subtitle', 'Kami percaya bahwa setiap pasangan layak mendapatkan pernikahan impian tanpa harus menguras tabungan.'],
-      ['about_story_title', 'Cerita Kami'],
-      ['about_story_1', 'BridalNest lahir dari pengalaman pribadi pendiri kami yang menyadari bahwa busana dan dekorasi pernikahan berkualitas premium sering kali hanya dipakai sekali. Sementara banyak calon pengantin yang menginginkan produk premium tetapi terkendala budget.'],
-      ['about_story_2', 'Sejak 2024, kami menghubungkan pemilik busana pernikahan berkualitas dengan calon pengantin yang ingin menyewa. Platform kami memungkinkan siapa saja untuk menyewakan koleksi pernikahan mereka dengan aman dan nyaman.'],
-      ['about_story_3', 'Lebih dari sekadar platform sewa, BridalNest adalah komunitas yang mendukung pernikahan berkelanjutan — di mana keindahan bisa dinikmati bersama tanpa harus memiliki.'],
-      ['about_quote', 'Sewa Elegan, Tampil Memukau'],
-      ['about_value_1_title', 'Berkelanjutan'],
-      ['about_value_1_desc', 'Mendukung ekonomi sirkular dengan memaksimalkan penggunaan produk pernikahan berkualitas melalui penyewaan.'],
-      ['about_value_2_title', 'Terpercaya'],
-      ['about_value_2_desc', 'Setiap produk diverifikasi kualitasnya dan setiap transaksi sewa dilindungi dengan sistem yang aman.'],
-      ['about_value_3_title', 'Kualitas Premium'],
-      ['about_value_3_desc', 'Hanya produk berkualitas tinggi yang lolos kurasi ketat tim kami untuk disewakan.'],
-      ['about_stat_1', '500+'],
-      ['about_stat_1_label', 'Produk Sewa'],
-      ['about_stat_2', '1,200+'],
-      ['about_stat_2_label', 'Booking Sukses'],
-      ['about_stat_3', '150+'],
-      ['about_stat_3_label', 'Penyewa Terverifikasi'],
-      ['about_stat_4', '4.9/5'],
-      ['about_stat_4_label', 'Rating Kepuasan'],
-      ['about_cta_title', 'Bergabung Bersama Kami'],
-      ['about_cta_desc', 'Punya busana atau dekorasi pernikahan yang ingin disewakan? Atau sedang mencari perlengkapan pernikahan impian untuk disewa? Bergabunglah dengan komunitas kami.'],
-      ['about_image', ''],
-    ];
-    defaults.forEach(([key, value]) => {
-      db.run('INSERT INTO site_settings (setting_key, setting_value) VALUES (?,?)', [key, value]);
-    });
-  }
-
-  // Seed default categories if empty
+  // Seed default categories
   const catCount = db.exec('SELECT COUNT(*) FROM categories');
   if (catCount[0].values[0][0] === 0) {
     const defaultCategories = [
@@ -244,7 +208,37 @@ async function initDatabase() {
     });
   }
 
-  // Seed default admin if no users exist
+  // Seed default about settings
+  const settingsCount = db.exec('SELECT COUNT(*) FROM site_settings');
+  if (settingsCount[0].values[0][0] === 0) {
+    const defaults = [
+      ['about_title', 'Platform Sewa Pernikahan yang Terpercaya'],
+      ['about_subtitle', 'Kami percaya bahwa setiap pasangan layak mendapatkan pernikahan impian tanpa harus menguras tabungan.'],
+      ['about_story_title', 'Cerita Kami'],
+      ['about_story_1', 'Kami menghubungkan pemilik busana pernikahan berkualitas dengan calon pengantin yang ingin menyewa.'],
+      ['about_story_2', 'Platform kami memungkinkan siapa saja untuk menyewakan koleksi pernikahan mereka dengan aman dan nyaman.'],
+      ['about_story_3', 'Lebih dari sekadar platform sewa, kami adalah komunitas yang mendukung pernikahan berkelanjutan.'],
+      ['about_quote', 'Sewa Elegan, Tampil Memukau'],
+      ['about_value_1_title', 'Berkelanjutan'],
+      ['about_value_1_desc', 'Mendukung ekonomi sirkular dengan memaksimalkan penggunaan produk pernikahan berkualitas.'],
+      ['about_value_2_title', 'Terpercaya'],
+      ['about_value_2_desc', 'Setiap produk diverifikasi dan setiap transaksi dilindungi dengan sistem yang aman.'],
+      ['about_value_3_title', 'Kualitas Premium'],
+      ['about_value_3_desc', 'Hanya produk berkualitas tinggi yang lolos kurasi ketat tim kami.'],
+      ['about_stat_1', '500+'], ['about_stat_1_label', 'Produk Sewa'],
+      ['about_stat_2', '1,200+'], ['about_stat_2_label', 'Booking Sukses'],
+      ['about_stat_3', '150+'], ['about_stat_3_label', 'Penyewa Terverifikasi'],
+      ['about_stat_4', '4.9/5'], ['about_stat_4_label', 'Rating Kepuasan'],
+      ['about_cta_title', 'Bergabung Bersama Kami'],
+      ['about_cta_desc', 'Bergabunglah dengan komunitas kami untuk menyewakan atau menyewa perlengkapan pernikahan.'],
+      ['about_image', ''],
+    ];
+    defaults.forEach(([key, value]) => {
+      db.run('INSERT INTO site_settings (setting_key, setting_value) VALUES (?,?)', [key, value]);
+    });
+  }
+
+  // Seed default admin
   const userCount = db.exec('SELECT COUNT(*) FROM users');
   if (userCount[0].values[0][0] === 0) {
     const bcrypt = require('bcryptjs');
@@ -253,11 +247,15 @@ async function initDatabase() {
       'INSERT INTO users (name, email, password, phone, role) VALUES (?,?,?,?,?)',
       ['Admin', 'rendisuryahd@gmail.com', hashedPassword, null, 'admin']
     );
-    console.log('Default admin account created: rendisuryahd@gmail.com');
+    console.log('Default admin created: rendisuryahd@gmail.com');
   }
 
   saveDatabase();
-  console.log('Database tables initialized successfully');
+  console.log('Database initialized successfully');
+
+  // Schedule first backup after init
+  scheduleBackup();
+
   return db;
 }
 
@@ -267,7 +265,6 @@ function saveDatabase() {
     const buffer = Buffer.from(data);
     fs.writeFileSync(DB_PATH, buffer);
   }
-  // Auto backup to Cloudinary (debounced)
   scheduleBackup();
 }
 
@@ -275,8 +272,8 @@ let backupTimer = null;
 function scheduleBackup() {
   if (backupTimer) clearTimeout(backupTimer);
   backupTimer = setTimeout(() => {
-    backupDbToCloud();
-  }, 5000); // Backup 5 seconds after last save
+    backupDbToCloud().catch(() => {});
+  }, 10000);
 }
 
 module.exports = { getDatabase, saveDatabase, backupDbToCloud };
