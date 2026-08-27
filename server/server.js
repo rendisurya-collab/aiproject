@@ -77,7 +77,7 @@ app.get('/api/db-status', async (req, res) => {
 // Test cloud backup URL
 app.get('/api/test-restore', async (req, res) => {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-  const url = `https://res.cloudinary.com/${cloudName}/raw/upload/bridalnest/backup/database`;
+  const url = `https://res.cloudinary.com/${cloudName}/raw/upload/bridalnest_db_backup`;
   try {
     const response = await fetch(url);
     res.json({

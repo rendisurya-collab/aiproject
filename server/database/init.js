@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 const DB_PATH = path.join(__dirname, 'bridalnest.db');
-const CLOUDINARY_DB_PUBLIC_ID = 'bridalnest/backup/database';
+const CLOUDINARY_DB_PUBLIC_ID = 'bridalnest_db_backup';
 
 let db = null;
 let dbReady = null;
@@ -19,28 +19,35 @@ async function downloadDbFromCloud() {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   if (!cloudName) return false;
 
-  try {
-    const url = `https://res.cloudinary.com/${cloudName}/raw/upload/${CLOUDINARY_DB_PUBLIC_ID}`;
-    console.log('Trying to restore database from Cloudinary...');
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
-    const response = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeout);
-    if (response.ok) {
-      const contentType = response.headers.get('content-type') || '';
-      if (!contentType.includes('html')) {
-        const buffer = Buffer.from(await response.arrayBuffer());
-        if (buffer.length > 100) {
-          fs.writeFileSync(DB_PATH, buffer);
-          console.log('Database restored from Cloudinary (' + buffer.length + ' bytes)');
-          return true;
+  // Try multiple URL patterns
+  const urls = [
+    `https://res.cloudinary.com/${cloudName}/raw/upload/bridalnest_db_backup`,
+    `https://res.cloudinary.com/${cloudName}/raw/upload/v1/bridalnest_db_backup`,
+  ];
+
+  for (const url of urls) {
+    try {
+      console.log('Trying restore from:', url);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeout);
+      if (response.ok) {
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('html') && !contentType.includes('gif')) {
+          const buffer = Buffer.from(await response.arrayBuffer());
+          if (buffer.length > 100) {
+            fs.writeFileSync(DB_PATH, buffer);
+            console.log('Database restored from Cloudinary (' + buffer.length + ' bytes)');
+            return true;
+          }
         }
       }
+    } catch (err) {
+      console.log('URL failed:', err.message);
     }
-    console.log('No valid cloud backup found');
-  } catch (err) {
-    console.log('Cloud restore skipped:', err.message);
   }
+  console.log('No valid cloud backup found, starting fresh');
   return false;
 }
 
