@@ -219,27 +219,9 @@ export default function HomePage() {
                   className="relative rounded-xl overflow-hidden bg-black aspect-[9/16] cursor-pointer group shadow-md hover:shadow-xl transition-shadow"
                 >
                   {video.video_type === 'youtube' ? (
-                    <a
-                      href={`vnd.youtube://${video.youtube_id || ''}`}
-                      onClick={(e) => {
-                        // Try YouTube app deep link first, fallback to web
-                        const ytId = video.youtube_id || video.video_url.split('/').pop();
-                        const appUrl = `vnd.youtube://${ytId}`;
-                        const webUrl = `https://www.youtube.com/watch?v=${ytId}`;
-                        
-                        // On mobile, try app link. On desktop, open in new tab
-                        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                        if (isMobile) {
-                          e.preventDefault();
-                          window.location.href = appUrl;
-                          // Fallback if app not installed
-                          setTimeout(() => { window.open(webUrl, '_blank'); }, 500);
-                        } else {
-                          e.preventDefault();
-                          window.open(webUrl, '_blank');
-                        }
-                      }}
-                      className="block w-full h-full"
+                    <div
+                      onClick={() => setPlayingVideo(video.id)}
+                      className="w-full h-full"
                     >
                       <img
                         src={video.thumbnail}
@@ -251,30 +233,20 @@ export default function HomePage() {
                           <span className="text-white text-xl ml-0.5">▶</span>
                         </div>
                       </div>
-                    </a>
+                    </div>
                   ) : (
-                    <div onClick={() => setPlayingVideo(playingVideo === video.id ? null : video.id)}>
+                    <div onClick={() => setPlayingVideo(video.id)}>
                       <video
                         src={video.video_url}
                         className="w-full h-full object-cover"
-                        muted={playingVideo !== video.id}
-                        autoPlay={playingVideo === video.id}
-                        loop
+                        muted
                         playsInline
-                        ref={(el) => {
-                          if (el) {
-                            if (playingVideo === video.id) el.play().catch(() => {});
-                            else { el.pause(); el.currentTime = 0; }
-                          }
-                        }}
                       />
-                      {playingVideo !== video.id && (
-                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/30 transition-colors">
-                          <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
-                            <span className="text-primary-600 text-lg ml-0.5">▶</span>
-                          </div>
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/30 transition-colors">
+                        <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                          <span className="text-primary-600 text-lg ml-0.5">▶</span>
                         </div>
-                      )}
+                      </div>
                     </div>
                   )}
                   {/* Info at bottom */}
@@ -297,6 +269,55 @@ export default function HomePage() {
           </div>
         </section>
       )}
+
+      {/* Fullscreen Video Player Modal */}
+      {playingVideo && (() => {
+        const video = videos.find(v => v.id === playingVideo);
+        if (!video) return null;
+        const ytId = video.youtube_id || video.video_url.split('/').pop();
+        return (
+          <div
+            className="fixed inset-0 z-50 bg-black flex items-center justify-center"
+            onClick={() => setPlayingVideo(null)}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setPlayingVideo(null)}
+              className="absolute top-4 right-4 z-50 w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white text-xl hover:bg-white/40"
+              aria-label="Tutup"
+            >
+              ✕
+            </button>
+            {/* Video title */}
+            {video.title && (
+              <div className="absolute top-4 left-4 z-50">
+                <p className="text-white text-sm font-medium drop-shadow">{video.title}</p>
+              </div>
+            )}
+            {/* Player */}
+            <div className="w-full h-full max-w-[100vw] max-h-[100vh]" onClick={(e) => e.stopPropagation()}>
+              {video.video_type === 'youtube' ? (
+                <iframe
+                  src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
+                  className="w-full h-full"
+                  allow="autoplay; encrypted-media; fullscreen"
+                  allowFullScreen
+                  title={video.title || 'Video'}
+                />
+              ) : (
+                <video
+                  src={video.video_url}
+                  className="w-full h-full object-contain"
+                  autoPlay
+                  controls
+                  playsInline
+                  loop
+                />
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Featured Products */}
       <section className="py-16">
