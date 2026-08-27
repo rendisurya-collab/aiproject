@@ -22,18 +22,28 @@ async function downloadDbFromCloud() {
 
   try {
     const url = `https://res.cloudinary.com/${cloudName}/raw/upload/${CLOUDINARY_DB_PUBLIC_ID}`;
-    console.log('Trying to restore database from:', url);
-    const response = await fetch(url);
+    console.log('Trying to restore database from Cloudinary...');
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
     if (response.ok) {
-      const buffer = Buffer.from(await response.arrayBuffer());
-      fs.writeFileSync(DB_PATH, buffer);
-      console.log('Database restored from Cloudinary backup');
-      return true;
+      const contentType = response.headers.get('content-type') || '';
+      // Make sure we got actual file data, not an HTML error page
+      if (!contentType.includes('html')) {
+        const buffer = Buffer.from(await response.arrayBuffer());
+        if (buffer.length > 100) { // Valid SQLite DB should be > 100 bytes
+          fs.writeFileSync(DB_PATH, buffer);
+          console.log('Database restored from Cloudinary backup (' + buffer.length + ' bytes)');
+          return true;
+        }
+      }
+      console.log('Cloud response was not a valid database file');
     } else {
       console.log('Cloud backup not found (status:', response.status, ')');
     }
   } catch (err) {
-    console.log('No cloud backup found:', err.message);
+    console.log('Could not restore from cloud (this is OK for first deploy):', err.message);
   }
   return false;
 }
