@@ -176,6 +176,8 @@ async function initDatabase() {
   `);
 
   try { db.run('ALTER TABLE categories ADD COLUMN image TEXT'); } catch(e) {}
+  try { db.run('ALTER TABLE videos ADD COLUMN video_type TEXT DEFAULT "upload"'); } catch(e) {}
+  try { db.run('ALTER TABLE videos ADD COLUMN youtube_id TEXT'); } catch(e) {}
 
   db.run(`
     CREATE TABLE IF NOT EXISTS banners (
@@ -208,6 +210,8 @@ async function initDatabase() {
       video_url TEXT NOT NULL,
       thumbnail TEXT,
       duration TEXT,
+      video_type TEXT DEFAULT 'upload',
+      youtube_id TEXT,
       sort_order INTEGER DEFAULT 0,
       is_active INTEGER DEFAULT 1,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP

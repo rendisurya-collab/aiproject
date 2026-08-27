@@ -89,8 +89,8 @@ router.post('/', authenticateToken, upload.single('video'), async (req, res) => 
 
     const db = await getDatabase();
     db.run(
-      'INSERT INTO videos (title, description, video_url, thumbnail, duration, sort_order) VALUES (?,?,?,?,?,?)',
-      [title || null, description || null, videoUrl, thumbnail, duration, sort_order || 0]
+      'INSERT INTO videos (title, description, video_url, thumbnail, duration, video_type, sort_order) VALUES (?,?,?,?,?,?,?)',
+      [title || null, description || null, videoUrl, thumbnail, duration, 'upload', sort_order || 0]
     );
     saveDatabase();
 
@@ -99,6 +99,44 @@ router.post('/', authenticateToken, upload.single('video'), async (req, res) => 
   } catch (err) {
     console.error('Video upload error:', err);
     res.status(500).json({ message: 'Gagal mengunggah video: ' + err.message });
+  }
+});
+
+// POST /api/videos/youtube - Add YouTube video by link
+router.post('/youtube', authenticateToken, async (req, res) => {
+  try {
+    const { url, title, description, sort_order } = req.body;
+
+    if (!url) return res.status(400).json({ message: 'URL YouTube wajib diisi' });
+
+    // Extract YouTube ID from various URL formats
+    let youtubeId = null;
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+      /^([a-zA-Z0-9_-]{11})$/,
+    ];
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) { youtubeId = match[1]; break; }
+    }
+
+    if (!youtubeId) return res.status(400).json({ message: 'URL YouTube tidak valid' });
+
+    const videoUrl = `https://www.youtube.com/embed/${youtubeId}`;
+    const thumbnail = `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+
+    const db = await getDatabase();
+    db.run(
+      'INSERT INTO videos (title, description, video_url, thumbnail, duration, video_type, youtube_id, sort_order) VALUES (?,?,?,?,?,?,?,?)',
+      [title || null, description || null, videoUrl, thumbnail, null, 'youtube', youtubeId, sort_order || 0]
+    );
+    saveDatabase();
+
+    const result = db.exec('SELECT * FROM videos WHERE id = last_insert_rowid()');
+    res.status(201).json({ message: 'Video YouTube berhasil ditambahkan', video: resultToObjects(result)[0] });
+  } catch (err) {
+    console.error('YouTube add error:', err);
+    res.status(500).json({ message: 'Gagal menambahkan video' });
   }
 });
 
