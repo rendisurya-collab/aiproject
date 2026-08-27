@@ -200,6 +200,20 @@ async function initDatabase() {
     )
   `);
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS videos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT,
+      description TEXT,
+      video_url TEXT NOT NULL,
+      thumbnail TEXT,
+      duration TEXT,
+      sort_order INTEGER DEFAULT 0,
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Seed default categories
   const catCount = db.exec('SELECT COUNT(*) FROM categories');
   if (catCount[0].values[0][0] === 0) {

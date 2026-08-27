@@ -154,6 +154,7 @@ function dashHTML(){return `
     <button class="tab ${tab==='upload'?'active':''}" onclick="switchTab('upload')">➕ Unggah Produk</button>
     <button class="tab ${tab==='categories'?'active':''}" onclick="switchTab('categories')">🏷️ Kategori</button>
     <button class="tab ${tab==='banners'?'active':''}" onclick="switchTab('banners')">🖼️ Banner</button>
+    <button class="tab ${tab==='videos'?'active':''}" onclick="switchTab('videos')">🎬 Video</button>
     <button class="tab ${tab==='about'?'active':''}" onclick="switchTab('about')">📄 Tentang</button>
   </div>
   <div id="content"></div>
@@ -168,11 +169,12 @@ function renderContent(){
   else if(tab==='upload')c.innerHTML=uploadHTML();
   else if(tab==='categories')c.innerHTML=catHTML();
   else if(tab==='banners')c.innerHTML=bannerHTML();
+  else if(tab==='videos')c.innerHTML=videoHTML();
   else if(tab==='about')c.innerHTML=aboutHTML();
   if(tab==='upload')setupDrop();
 }
 
-async function loadAll(){await Promise.all([loadProducts(),loadCategories(),loadBanners(),loadAboutSettings()]); renderContent()}
+async function loadAll(){await Promise.all([loadProducts(),loadCategories(),loadBanners(),loadVideos(),loadAboutSettings()]); renderContent()}
 
 // ===== PRODUCTS =====
 async function loadProducts(){
@@ -566,6 +568,118 @@ async function uploadCatImage(catId){
     if(r.ok){await loadCategories();renderContent()}
     else{const d=await r.json();alert(d.message||'Gagal upload')}
   }catch(e){alert('Gagal upload gambar')}
+}
+
+// ===== VIDEOS =====
+let videos=[];
+
+async function loadVideos(){
+  try{const r=await fetch(API+'/api/videos/all',{headers:{'Authorization':'Bearer '+token}});if(r.ok){const d=await r.json();videos=d.videos||[]}}catch(e){}
+}
+
+function videoHTML(){return `
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <h2 style="font-size:1rem">🎬 Kelola Video Short</h2>
+    <button class="btn btn-p btn-sm" onclick="openAddVideo()">➕ Upload Video</button>
+  </div>
+  <div id="vmsg"></div>
+  <p style="font-size:.7rem;color:#888;margin-bottom:14px">Upload video pendek (maks 50MB). Format: MP4, WebM, MOV. Video akan ditampilkan di homepage.</p>
+  ${videos.length?`
+  <div class="grid">${videos.map(v=>`
+    <div class="pcard">
+      <div class="pcard-img" style="position:relative;background:#000">
+        <video src="${v.video_url}" style="width:100%;height:100%;object-fit:cover" muted></video>
+        <span style="position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.7);color:#fff;font-size:.6rem;padding:2px 6px;border-radius:4px">${v.duration||'--'}</span>
+        <span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.5rem;opacity:.8">▶️</span>
+      </div>
+      <div class="pcard-body">
+        <h3>${v.title||'(Tanpa judul)'}</h3>
+        <p style="font-size:.68rem;color:#888;margin-bottom:6px">${v.description||''}</p>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+          <span style="font-size:.6rem;color:${v.is_active?'#16a34a':'#999'}">${v.is_active?'● Aktif':'● Nonaktif'}</span>
+        </div>
+        <div class="pcard-actions">
+          <button class="btn btn-s btn-sm" onclick="openEditVideo(${v.id})">✏️ Edit</button>
+          <button class="btn btn-d btn-sm" onclick="doDeleteVideo(${v.id})">🗑️</button>
+        </div>
+      </div>
+    </div>`).join('')}</div>`:'<div class="empty"><p style="font-size:2rem">🎬</p><p>Belum ada video. Upload video pendek untuk ditampilkan di homepage.</p></div>'}
+</div>`}
+
+function openAddVideo(){
+  document.getElementById('modal').innerHTML=`
+  <div class="modal-bg" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h2>🎬 Upload Video Short</h2>
+      <div id="vamsg"></div>
+      <form onsubmit="doAddVideo(event)" enctype="multipart/form-data">
+        <div class="fg"><label>File Video * (maks 50MB)</label><input type="file" id="vf" accept="video/mp4,video/webm,video/quicktime,video/x-msvideo" required/></div>
+        <div class="fg"><label>Judul (opsional)</label><input id="vt" placeholder="Judul video"/></div>
+        <div class="fg"><label>Deskripsi (opsional)</label><input id="vd" placeholder="Deskripsi singkat"/></div>
+        <div class="fg"><label>Urutan</label><input type="number" id="vo" value="0"/></div>
+        <p style="font-size:.65rem;color:#888;margin-bottom:12px">Upload mungkin memakan waktu beberapa menit tergantung ukuran file.</p>
+        <div class="modal-acts"><button type="button" class="btn btn-s" onclick="closeModal()">Batal</button><button class="btn btn-p" id="vbtn">📤 Upload Video</button></div>
+      </form>
+    </div>
+  </div>`;
+}
+
+async function doAddVideo(e){
+  e.preventDefault();
+  const file=document.getElementById('vf').files[0];
+  if(!file)return;
+  if(file.size>50*1024*1024){document.getElementById('vamsg').innerHTML='<div class="alert alert-e">File terlalu besar (maks 50MB)</div>';return}
+  const b=document.getElementById('vbtn');b.disabled=true;b.textContent='Mengunggah... (tunggu)';
+  const fd=new FormData();
+  fd.append('video',file);
+  fd.append('title',document.getElementById('vt').value);
+  fd.append('description',document.getElementById('vd').value);
+  fd.append('sort_order',document.getElementById('vo').value);
+  try{
+    const r=await fetch(API+'/api/videos',{method:'POST',headers:{'Authorization':'Bearer '+token},body:fd});
+    const d=await r.json();
+    if(r.ok){closeModal();await loadVideos();renderContent()}
+    else{document.getElementById('vamsg').innerHTML=`<div class="alert alert-e">${d.message}</div>`;b.disabled=false;b.textContent='📤 Upload Video'}
+  }catch(er){document.getElementById('vamsg').innerHTML='<div class="alert alert-e">Gagal upload</div>';b.disabled=false;b.textContent='📤 Upload Video'}
+}
+
+function openEditVideo(id){
+  const v=videos.find(x=>x.id===id);if(!v)return;
+  document.getElementById('modal').innerHTML=`
+  <div class="modal-bg" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h2>✏️ Edit Video</h2>
+      <div id="vemsg"></div>
+      <div style="margin-bottom:12px;border-radius:8px;overflow:hidden;height:150px;background:#000">
+        <video src="${v.video_url}" style="width:100%;height:100%;object-fit:contain" controls></video>
+      </div>
+      <form onsubmit="doUpdateVideo(event,${v.id})">
+        <div class="fg"><label>Judul</label><input id="vet" value="${v.title||''}"/></div>
+        <div class="fg"><label>Deskripsi</label><input id="ved" value="${v.description||''}"/></div>
+        <div class="row2">
+          <div class="fg"><label>Urutan</label><input type="number" id="veo" value="${v.sort_order||0}"/></div>
+          <div class="fg"><label>Status</label><select id="vea"><option value="1" ${v.is_active?'selected':''}>Aktif</option><option value="0" ${!v.is_active?'selected':''}>Nonaktif</option></select></div>
+        </div>
+        <div class="modal-acts"><button type="button" class="btn btn-s" onclick="closeModal()">Batal</button><button class="btn btn-p">💾 Simpan</button></div>
+      </form>
+    </div>
+  </div>`;
+}
+
+async function doUpdateVideo(e,id){
+  e.preventDefault();
+  const body={title:document.getElementById('vet').value,description:document.getElementById('ved').value,sort_order:parseInt(document.getElementById('veo').value),is_active:document.getElementById('vea').value==='1'};
+  try{
+    const r=await fetch(API+'/api/videos/'+id,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body)});
+    if(r.ok){closeModal();await loadVideos();renderContent()}
+    else{const d=await r.json();document.getElementById('vemsg').innerHTML=`<div class="alert alert-e">${d.message}</div>`}
+  }catch(er){document.getElementById('vemsg').innerHTML='<div class="alert alert-e">Gagal</div>'}
+}
+
+async function doDeleteVideo(id){
+  if(!confirm('Yakin hapus video ini?'))return;
+  try{const r=await fetch(API+'/api/videos/'+id,{method:'DELETE',headers:{'Authorization':'Bearer '+token}});if(r.ok){await loadVideos();renderContent()}}catch(e){}
 }
 
 // ===== ABOUT PAGE SETTINGS =====

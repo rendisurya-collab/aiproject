@@ -7,15 +7,18 @@ import { products, categories as defaultCategories } from '../data/products';
 export default function HomePage() {
   const [banners, setBanners] = useState([]);
   const [categories, setCategories] = useState(defaultCategories);
+  const [videos, setVideos] = useState([]);
   const [currentBanner, setCurrentBanner] = useState(0);
+  const [playingVideo, setPlayingVideo] = useState(null);
   const featuredProducts = products.slice(0, 8);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [bannerRes, catRes] = await Promise.all([
+        const [bannerRes, catRes, videoRes] = await Promise.all([
           fetch('/api/banners'),
           fetch('/api/categories'),
+          fetch('/api/videos'),
         ]);
         if (bannerRes.ok) {
           const data = await bannerRes.json();
@@ -32,6 +35,10 @@ export default function HomePage() {
               count: 0,
             })));
           }
+        }
+        if (videoRes.ok) {
+          const data = await videoRes.json();
+          if (data.videos && data.videos.length > 0) setVideos(data.videos);
         }
       } catch (err) { /* fallback */ }
     }
@@ -194,6 +201,61 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Video Shorts */}
+      {videos.length > 0 && (
+        <section className="py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-serif font-bold text-gray-900 mb-3">
+                Video Inspirasi
+              </h2>
+              <p className="text-gray-600">Lihat koleksi terbaru kami dalam video pendek</p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {videos.map((video) => (
+                <div
+                  key={video.id}
+                  className="relative rounded-xl overflow-hidden bg-black aspect-[9/16] cursor-pointer group shadow-md hover:shadow-xl transition-shadow"
+                  onClick={() => setPlayingVideo(playingVideo === video.id ? null : video.id)}
+                >
+                  <video
+                    src={video.video_url}
+                    className="w-full h-full object-cover"
+                    muted={playingVideo !== video.id}
+                    autoPlay={playingVideo === video.id}
+                    loop
+                    playsInline
+                    ref={(el) => {
+                      if (el) {
+                        if (playingVideo === video.id) el.play().catch(() => {});
+                        else { el.pause(); el.currentTime = 0; }
+                      }
+                    }}
+                  />
+                  {/* Overlay when not playing */}
+                  {playingVideo !== video.id && (
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/30 transition-colors">
+                      <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                        <span className="text-primary-600 text-lg ml-0.5">▶</span>
+                      </div>
+                    </div>
+                  )}
+                  {/* Info at bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent">
+                    {video.title && (
+                      <p className="text-white text-sm font-medium line-clamp-1">{video.title}</p>
+                    )}
+                    {video.duration && (
+                      <p className="text-white/70 text-xs mt-0.5">{video.duration}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Featured Products */}
       <section className="py-16">
