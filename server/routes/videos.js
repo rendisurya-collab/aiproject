@@ -123,7 +123,7 @@ router.post('/youtube', authenticateToken, async (req, res) => {
     if (!youtubeId) return res.status(400).json({ message: 'URL YouTube tidak valid' });
 
     const videoUrl = `https://www.youtube.com/embed/${youtubeId}`;
-    const thumbnail = `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+    const thumbnail = `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
 
     const db = await getDatabase();
     db.run(

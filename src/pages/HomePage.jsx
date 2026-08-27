@@ -216,7 +216,7 @@ export default function HomePage() {
               {videos.map((video) => (
                 <div
                   key={video.id}
-                  className="relative rounded-xl overflow-hidden bg-black aspect-[9/16] cursor-pointer group shadow-md hover:shadow-xl transition-shadow"
+                  className="relative rounded-xl overflow-hidden bg-black aspect-[3/4] cursor-pointer group shadow-md hover:shadow-xl transition-shadow"
                 >
                   {video.video_type === 'youtube' ? (
                     <div
@@ -229,19 +229,28 @@ export default function HomePage() {
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/30 transition-colors">
-                        <div className="w-14 h-14 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
-                          <span className="text-white text-xl ml-0.5">▶</span>
+                        <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
+                          <span className="text-white text-lg ml-0.5">▶</span>
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div onClick={() => setPlayingVideo(video.id)}>
-                      <video
-                        src={video.video_url}
-                        className="w-full h-full object-cover"
-                        muted
-                        playsInline
-                      />
+                    <div onClick={() => setPlayingVideo(video.id)} className="w-full h-full">
+                      {video.thumbnail ? (
+                        <img
+                          src={video.thumbnail}
+                          alt={video.title || 'Video'}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <video
+                          src={video.video_url}
+                          className="w-full h-full object-cover"
+                          muted
+                          playsInline
+                          preload="metadata"
+                        />
+                      )}
                       <div className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/30 transition-colors">
                         <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
                           <span className="text-primary-600 text-lg ml-0.5">▶</span>
