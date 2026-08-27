@@ -186,7 +186,7 @@ export default function UploadProductPage() {
             Produk Berhasil Diunggah!
           </h2>
           <p className="text-sm text-gray-600 mb-6">
-            Produk Anda telah ditambahkan ke katalog BridalNest.
+            Produk Anda telah ditambahkan ke katalog Rian Rias Pengantin.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
@@ -218,7 +218,7 @@ export default function UploadProductPage() {
             Unggah Produk
           </h1>
           <p className="text-gray-600">
-            Jual atau sewakan busana &amp; dekorasi pernikahan Anda di BridalNest
+            Jual atau sewakan busana &amp; dekorasi pernikahan Anda di Rian Rias Pengantin
           </p>
         </div>
 

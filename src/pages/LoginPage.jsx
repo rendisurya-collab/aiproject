@@ -43,10 +43,10 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center space-x-2 mb-6">
             <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-              <span className="text-primary-700 font-serif font-bold text-xl">B</span>
+              <span className="text-primary-700 font-serif font-bold text-xl">R</span>
             </div>
             <span className="font-serif text-2xl font-semibold text-gray-900">
-              BridalNest
+              Rian Rias Pengantin
             </span>
           </Link>
           <h1 className="text-2xl font-serif font-bold text-gray-900 mb-2">

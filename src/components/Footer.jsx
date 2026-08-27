@@ -10,10 +10,10 @@ export default function Footer() {
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center space-x-2 mb-4">
               <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                <span className="text-primary-700 font-serif font-bold text-lg">B</span>
+                <span className="text-primary-700 font-serif font-bold text-lg">R</span>
               </div>
               <span className="font-serif text-xl font-semibold text-white">
-                BridalNest
+                Rian Rias Pengantin
               </span>
             </Link>
             <p className="text-sm text-gray-400 mb-4">
@@ -113,7 +113,7 @@ export default function Footer() {
               </li>
               <li className="flex items-center space-x-2">
                 <Mail className="w-4 h-4 text-primary-400 flex-shrink-0" />
-                <span className="text-sm">hello@bridalnest.id</span>
+                <span className="text-sm">hello@rianriaspengantin.id</span>
               </li>
             </ul>
           </div>
@@ -121,7 +121,7 @@ export default function Footer() {
 
         <div className="border-t border-gray-800 mt-10 pt-6 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-gray-500">
-            &copy; 2026 BridalNest. All rights reserved.
+            &copy; 2026 Rian Rias Pengantin. All rights reserved.
           </p>
           <div className="flex space-x-4 mt-3 md:mt-0">
             <a href="#" className="text-xs text-gray-500 hover:text-gray-300">Syarat &amp; Ketentuan</a>

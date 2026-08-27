@@ -46,7 +46,7 @@ app.use('/api/videos', videoRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'BridalNest API is running' });
+  res.json({ status: 'OK', message: 'Rian Rias Pengantin API is running' });
 });
 
 // Manual database backup trigger
@@ -120,12 +120,12 @@ app.use((err, req, res, next) => {
 // Initialize database then start server
 getDatabase().then(() => {
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`BridalNest API server running on port ${PORT}`);
+    console.log(`Rian Rias Pengantin API running on port ${PORT}`);
   });
 }).catch((err) => {
   console.error('Failed to initialize database:', err);
   // Start server anyway with fresh DB
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`BridalNest API server running on port ${PORT} (fresh DB)`);
+    console.log(`Rian Rias Pengantin API running on port ${PORT} (fresh DB)`);
   });
 });

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BridalNest Admin - Kelola Produk & Kategori</title>
+  <title>Rian Rias Pengantin Admin - Kelola Produk & Kategori</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:'Segoe UI',system-ui,sans-serif;background:#f8f9fa;color:#333}
@@ -86,7 +86,7 @@ function render(){document.getElementById('app').innerHTML=token?dashHTML():logi
 
 function loginHTML(){return `
 <div class="auth-box">
-  <h2>🌿 BridalNest Admin</h2>
+  <h2>🌿 Rian Rias Pengantin Admin</h2>
   <p>Masuk untuk mengelola produk & kategori</p>
   <div id="msg"></div>
   <div id="auth-form">
@@ -147,7 +147,7 @@ async function doLogin(e){
 function logout(){token='';user=null;localStorage.removeItem('admin_token');render()}
 
 function dashHTML(){return `
-<div class="header"><h1>🌿 BridalNest Admin</h1><div class="right"><span>${user?user.name:''}</span><button onclick="logout()">Logout</button></div></div>
+<div class="header"><h1>🌿 Rian Rias Pengantin Admin</h1><div class="right"><span>${user?user.name:''}</span><button onclick="logout()">Logout</button></div></div>
 <div class="container">
   <div class="tabs">
     <button class="tab ${tab==='products'?'active':''}" onclick="switchTab('products')">📦 Produk</button>

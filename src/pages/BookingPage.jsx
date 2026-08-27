@@ -190,7 +190,7 @@ export default function BookingPage() {
 
               <div className="mt-5 pt-4 border-t border-gray-100">
                 <p className="text-xs text-gray-500 mb-4">
-                  Dengan mengonfirmasi, Anda menyetujui syarat dan ketentuan sewa BridalNest.
+                  Dengan mengonfirmasi, Anda menyetujui syarat dan ketentuan sewa Rian Rias Pengantin.
                 </p>
                 <button
                   onClick={handleConfirmBooking}
