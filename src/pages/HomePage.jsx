@@ -219,30 +219,39 @@ export default function HomePage() {
                   className="relative rounded-xl overflow-hidden bg-black aspect-[9/16] cursor-pointer group shadow-md hover:shadow-xl transition-shadow"
                 >
                   {video.video_type === 'youtube' ? (
-                    <>
-                      {playingVideo === video.id ? (
-                        <iframe
-                          src={`${video.video_url}?autoplay=1&mute=0&loop=1`}
-                          className="w-full h-full"
-                          allow="autoplay; encrypted-media"
-                          allowFullScreen
-                          title={video.title || 'Video'}
-                        />
-                      ) : (
-                        <div onClick={() => setPlayingVideo(video.id)}>
-                          <img
-                            src={video.thumbnail}
-                            alt={video.title || 'Video'}
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/30 transition-colors">
-                            <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
-                              <span className="text-red-600 text-lg ml-0.5">▶</span>
-                            </div>
-                          </div>
+                    <a
+                      href={`vnd.youtube://${video.youtube_id || ''}`}
+                      onClick={(e) => {
+                        // Try YouTube app deep link first, fallback to web
+                        const ytId = video.youtube_id || video.video_url.split('/').pop();
+                        const appUrl = `vnd.youtube://${ytId}`;
+                        const webUrl = `https://www.youtube.com/watch?v=${ytId}`;
+                        
+                        // On mobile, try app link. On desktop, open in new tab
+                        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                        if (isMobile) {
+                          e.preventDefault();
+                          window.location.href = appUrl;
+                          // Fallback if app not installed
+                          setTimeout(() => { window.open(webUrl, '_blank'); }, 500);
+                        } else {
+                          e.preventDefault();
+                          window.open(webUrl, '_blank');
+                        }
+                      }}
+                      className="block w-full h-full"
+                    >
+                      <img
+                        src={video.thumbnail}
+                        alt={video.title || 'Video'}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/30 transition-colors">
+                        <div className="w-14 h-14 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
+                          <span className="text-white text-xl ml-0.5">▶</span>
                         </div>
-                      )}
-                    </>
+                      </div>
+                    </a>
                   ) : (
                     <div onClick={() => setPlayingVideo(playingVideo === video.id ? null : video.id)}>
                       <video
