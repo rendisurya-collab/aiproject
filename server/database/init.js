@@ -21,8 +21,9 @@ async function downloadDbFromCloud() {
 
   // Try multiple URL patterns
   const urls = [
+    `https://res.cloudinary.com/${cloudName}/raw/upload/bridalnest_db_backup.db`,
     `https://res.cloudinary.com/${cloudName}/raw/upload/bridalnest_db_backup`,
-    `https://res.cloudinary.com/${cloudName}/raw/upload/v1/bridalnest_db_backup`,
+    `https://res.cloudinary.com/${cloudName}/raw/upload/v1/bridalnest_db_backup.db`,
   ];
 
   for (const url of urls) {
