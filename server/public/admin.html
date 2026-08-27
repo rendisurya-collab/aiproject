@@ -62,11 +62,25 @@
     .modal h2{margin-bottom:16px;font-size:1.1rem}
     .modal-acts{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
     table{width:100%;border-collapse:collapse;font-size:.82rem}
-    th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #f0f0f0}
+    th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #f0f0f0;white-space:nowrap}
     th{background:#f9fafb;font-weight:600;font-size:.72rem;text-transform:uppercase;color:#666}
     tr:hover td{background:#f0fdf4}
+    .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -24px;padding:0 24px}
     .status-active{color:#16a34a;font-weight:600}
     .status-inactive{color:#999}
+    @media(max-width:600px){
+      .container{padding:12px}
+      .card{padding:16px;margin-bottom:12px}
+      .grid{grid-template-columns:1fr}
+      .row2{grid-template-columns:1fr}
+      .row3{grid-template-columns:1fr}
+      .header{padding:12px 16px;flex-wrap:wrap;gap:8px}
+      .header h1{font-size:1rem}
+      .tabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+      .tab{white-space:nowrap;padding:7px 12px;font-size:.72rem}
+      .modal{padding:20px;margin:8px}
+      th,td{padding:6px 8px;font-size:.7rem}
+    }
   </style>
 </head>
 <body>
@@ -338,7 +352,7 @@ function catHTML(){return `
   </div>
   <div id="cmsg"></div>
   ${categories.length?`
-  <table>
+  <div class="table-wrap"><table>
     <thead><tr><th>Icon</th><th>Nama</th><th>Slug</th><th>Urutan</th><th>Status</th><th>Aksi</th></tr></thead>
     <tbody>${categories.map(c=>`
       <tr>
@@ -349,7 +363,7 @@ function catHTML(){return `
         <td><span class="${c.is_active?'status-active':'status-inactive'}">${c.is_active?'Aktif':'Nonaktif'}</span></td>
         <td><button class="btn btn-s btn-sm" onclick="openEditCategory(${c.id})">✏️</button> <button class="btn btn-d btn-sm" onclick="doDeleteCategory(${c.id})">🗑️</button></td>
       </tr>`).join('')}</tbody>
-  </table>`:'<div class="empty"><p>Belum ada kategori</p></div>'}
+  </table></div>`:'<div class="empty"><p>Belum ada kategori</p></div>'}
 </div>`}
 
 function openAddCategory(){
@@ -756,7 +770,7 @@ function bookingFieldsHTML(){
   </div>
   <p style="font-size:.7rem;color:#888;margin-bottom:14px">Atur kolom-kolom yang muncul di form booking customer. Bisa ditambah, diubah, dihapus, atau dinonaktifkan.</p>
   ${bookingFields.length?`
-  <table>
+  <div class="table-wrap"><table>
     <thead><tr><th>Label</th><th>Nama Field</th><th>Tipe</th><th>Wajib</th><th>Status</th><th>Aksi</th></tr></thead>
     <tbody>${bookingFields.map(f=>`
       <tr>
@@ -767,7 +781,7 @@ function bookingFieldsHTML(){
         <td><span class="${f.is_active?'status-active':'status-inactive'}">${f.is_active?'Aktif':'Nonaktif'}</span></td>
         <td><button class="btn btn-s btn-sm" onclick="openEditField(${f.id})">✏️</button> <button class="btn btn-d btn-sm" onclick="doDeleteField(${f.id})">🗑️</button></td>
       </tr>`).join('')}</tbody>
-  </table>`:'<div class="empty"><p>Belum ada kolom form</p></div>'}
+  </table></div>`:'<div class="empty"><p>Belum ada kolom form</p></div>'}
 </div>`}
 
 function openAddField(){
@@ -847,7 +861,7 @@ function bookingsHTML(){
   <h2 style="font-size:1rem;margin-bottom:16px">📑 Data Booking Masuk</h2>
   ${bookingsData.length?`
   <p style="font-size:.75rem;color:#888;margin-bottom:12px">${bookingsData.length} booking</p>
-  <table>
+  <div class="table-wrap"><table>
     <thead><tr><th>Tanggal</th><th>Produk</th><th>Customer</th><th>Durasi</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
     <tbody>${bookingsData.map(b=>{
       const fd=b.form_data||{};
@@ -866,7 +880,7 @@ function bookingsHTML(){
           <button class="btn btn-d btn-sm" onclick="doDeleteBooking(${b.id})">🗑️</button>
         </td>
       </tr>`}).join('')}</tbody>
-  </table>`:'<div class="empty"><p style="font-size:2rem">📑</p><p>Belum ada booking masuk.</p></div>'}
+  </table></div>`:'<div class="empty"><p style="font-size:2rem">📑</p><p>Belum ada booking masuk.</p></div>'}
 </div>`}
 
 function openBookingDetail(id){
