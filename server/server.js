@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-const { getDatabase } = require('./database/init');
+const { getDatabase, backupDbToCloud } = require('./database/init');
 
 const authRoutes = require('./routes/auth');
 const uploadRoutes = require('./routes/upload');
@@ -48,6 +48,16 @@ app.use('/api/settings', settingsRoutes);
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'BridalNest API is running' });
+});
+
+// Manual database backup trigger
+app.get('/api/backup-db', async (req, res) => {
+  try {
+    await backupDbToCloud();
+    res.json({ status: 'OK', message: 'Database backup triggered' });
+  } catch (err) {
+    res.status(500).json({ status: 'ERROR', message: err.message });
+  }
 });
 
 // Serve frontend build in production

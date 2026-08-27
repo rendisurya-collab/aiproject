@@ -279,4 +279,4 @@ function scheduleBackup() {
   }, 5000); // Backup 5 seconds after last save
 }
 
-module.exports = { getDatabase, saveDatabase };
+module.exports = { getDatabase, saveDatabase, backupDbToCloud };
