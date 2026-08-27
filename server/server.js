@@ -15,9 +15,6 @@ const settingsRoutes = require('./routes/settings');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Initialize database
-getDatabase();
-
 // Middleware
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
@@ -53,11 +50,28 @@ app.get('/api/health', (req, res) => {
 // Manual database backup trigger
 app.get('/api/backup-db', async (req, res) => {
   try {
-    await backupDbToCloud();
-    res.json({ status: 'OK', message: 'Database backup triggered' });
+    const result = await backupDbToCloud();
+    res.json({ status: 'OK', message: 'Database backup triggered', result });
   } catch (err) {
     res.status(500).json({ status: 'ERROR', message: err.message });
   }
+});
+
+// Check restore status
+app.get('/api/db-status', async (req, res) => {
+  const db = await getDatabase();
+  const banners = db.exec('SELECT COUNT(*) FROM banners');
+  const products = db.exec('SELECT COUNT(*) FROM products');
+  const users = db.exec('SELECT COUNT(*) FROM users');
+  const categories = db.exec('SELECT COUNT(*) FROM categories');
+  res.json({
+    banners: banners[0].values[0][0],
+    products: products[0].values[0][0],
+    users: users[0].values[0][0],
+    categories: categories[0].values[0][0],
+    cloudinary_configured: !!(process.env.CLOUDINARY_CLOUD_NAME),
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'not set',
+  });
 });
 
 // Serve frontend build in production
@@ -83,6 +97,15 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Terjadi kesalahan server' });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`BridalNest API server running on port ${PORT}`);
+// Initialize database then start server
+getDatabase().then(() => {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`BridalNest API server running on port ${PORT}`);
+  });
+}).catch((err) => {
+  console.error('Failed to initialize database:', err);
+  // Start server anyway with fresh DB
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`BridalNest API server running on port ${PORT} (fresh DB)`);
+  });
 });
