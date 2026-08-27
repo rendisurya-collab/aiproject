@@ -74,6 +74,24 @@ app.get('/api/db-status', async (req, res) => {
   });
 });
 
+// Test cloud backup URL
+app.get('/api/test-restore', async (req, res) => {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  const url = `https://res.cloudinary.com/${cloudName}/raw/upload/bridalnest/backup/database`;
+  try {
+    const response = await fetch(url);
+    res.json({
+      url,
+      status: response.status,
+      contentType: response.headers.get('content-type'),
+      size: response.headers.get('content-length'),
+      ok: response.ok,
+    });
+  } catch (err) {
+    res.json({ url, error: err.message });
+  }
+});
+
 // Serve frontend build in production
 const frontendBuildPath = path.join(__dirname, '..', 'dist');
 if (fs.existsSync(frontendBuildPath)) {
