@@ -21,16 +21,19 @@ async function downloadDbFromCloud() {
   if (!cloudName) return false;
 
   try {
-    const url = `https://res.cloudinary.com/${cloudName}/raw/upload/${CLOUDINARY_DB_PUBLIC_ID}.db`;
+    const url = `https://res.cloudinary.com/${cloudName}/raw/upload/${CLOUDINARY_DB_PUBLIC_ID}`;
+    console.log('Trying to restore database from:', url);
     const response = await fetch(url);
     if (response.ok) {
       const buffer = Buffer.from(await response.arrayBuffer());
       fs.writeFileSync(DB_PATH, buffer);
       console.log('Database restored from Cloudinary backup');
       return true;
+    } else {
+      console.log('Cloud backup not found (status:', response.status, ')');
     }
   } catch (err) {
-    console.log('No cloud backup found, creating fresh database');
+    console.log('No cloud backup found:', err.message);
   }
   return false;
 }
@@ -47,12 +50,13 @@ async function backupDbToCloud() {
       api_secret: process.env.CLOUDINARY_API_SECRET,
     });
 
-    await cloudinary.uploader.upload(DB_PATH, {
+    const result = await cloudinary.uploader.upload(DB_PATH, {
       resource_type: 'raw',
       public_id: CLOUDINARY_DB_PUBLIC_ID,
       overwrite: true,
+      invalidate: true,
     });
-    console.log('Database backed up to Cloudinary');
+    console.log('Database backed up to Cloudinary:', result.secure_url);
   } catch (err) {
     console.error('Database backup failed:', err.message);
   }
