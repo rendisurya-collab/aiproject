@@ -13,6 +13,7 @@ const bannerRoutes = require('./routes/banners');
 const settingsRoutes = require('./routes/settings');
 const videoRoutes = require('./routes/videos');
 const bookingRoutes = require('./routes/bookings');
+const chatbotRoutes = require('./routes/chatbot');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -45,6 +46,7 @@ app.use('/api/banners', bannerRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
