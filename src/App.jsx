@@ -12,11 +12,13 @@ import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import UploadProductPage from './pages/UploadProductPage';
 import ChatBot from './components/ChatBot';
+import ScrollToTop from './components/ScrollToTop';
 
 export default function App() {
   return (
     <AuthProvider>
       <Router>
+        <ScrollToTop />
         <div className="flex flex-col min-h-screen">
           <Navbar />
           <main className="flex-1">

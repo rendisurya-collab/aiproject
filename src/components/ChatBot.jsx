@@ -19,14 +19,20 @@ export default function ChatBot() {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Only scroll within the chat container, not the whole page
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isTyping]);
+    // Only auto-scroll when chat is open
+    if (isOpen) scrollToBottom();
+  }, [messages, isTyping, isOpen]);
 
   const sendMessage = async (text) => {
     const messageText = text || input;
@@ -106,7 +112,7 @@ export default function ChatBot() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
             {messages.map((msg, i) => (
               <div
                 key={i}
