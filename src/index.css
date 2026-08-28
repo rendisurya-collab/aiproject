@@ -4,7 +4,12 @@
 
 @layer base {
   body {
-    @apply font-sans text-gray-800 bg-sky-50 min-h-screen;
+    @apply font-sans text-gray-800 min-h-screen;
+    background-image: url('/background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
   }
 
   h1, h2, h3, h4 {
