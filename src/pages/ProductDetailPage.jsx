@@ -135,12 +135,9 @@ export default function ProductDetailPage() {
         <div className="grid lg:grid-cols-2 gap-10">
           {/* Image */}
           <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
-            <div className="relative aspect-[3/4] bg-gray-100 flex items-center justify-center overflow-hidden">
+            <div className="aspect-[3/4] bg-gradient-to-br from-primary-100 to-gold-100 flex items-center justify-center overflow-hidden">
               {product.imageUrl ? (
-                <>
-                  <img src={product.imageUrl} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-50" />
-                  <img src={product.imageUrl} alt={product.name} className="relative w-full h-full object-contain z-10" />
-                </>
+                <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
               ) : (
                 <span className="text-8xl">{product.image}</span>
               )}
