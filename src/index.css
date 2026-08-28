@@ -26,10 +26,20 @@
 }
 
 @layer utilities {
-  /* Semi-transparent surface so text is readable over the gold background */
+  /* Floating card surface: soft gray, rounded corners, soft shadow */
   .content-surface {
-    background: rgba(255, 255, 255, 0.82);
+    background-color: #f4f5f7; /* soft gray */
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
     backdrop-filter: blur(2px);
+  }
+
+  /* Generic reusable floating container */
+  .floating-card {
+    background-color: #f4f5f7;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+    padding: 1.5rem;
   }
 }
 
