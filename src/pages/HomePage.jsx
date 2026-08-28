@@ -176,7 +176,7 @@ export default function HomePage() {
 
       {/* Categories - Clickable Image Cards */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 content-surface rounded-2xl py-10">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-serif font-bold text-gray-900 mb-3">
               Kategori Sewa
@@ -225,7 +225,7 @@ export default function HomePage() {
       {/* Video Shorts */}
       {videos.length > 0 && (
         <section className="py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 content-surface rounded-2xl py-10">
             <div className="text-center mb-10">
               <h2 className="text-3xl font-serif font-bold text-gray-900 mb-3">
                 Video Inspirasi
@@ -350,7 +350,7 @@ export default function HomePage() {
 
       {/* Featured Products */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 content-surface rounded-2xl py-10">
           <div className="flex items-center justify-between mb-10">
             <div>
               <h2 className="text-3xl font-serif font-bold text-gray-900 mb-2">
@@ -382,7 +382,7 @@ export default function HomePage() {
 
       {/* How it works */}
       <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 content-surface rounded-2xl py-10">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-serif font-bold text-gray-900 mb-3">Cara Sewa</h2>
             <p className="text-gray-600">Mudah dan aman, hanya dalam beberapa langkah</p>
@@ -408,7 +408,7 @@ export default function HomePage() {
 
       {/* Trust */}
       <section className="py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 content-surface rounded-2xl py-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               { icon: Shield, title: 'Produk Terverifikasi', desc: 'Semua produk dicek kualitasnya' },
