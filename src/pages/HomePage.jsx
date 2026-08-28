@@ -8,17 +8,18 @@ export default function HomePage() {
   const [banners, setBanners] = useState([]);
   const [categories, setCategories] = useState(defaultCategories);
   const [videos, setVideos] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState(products.slice(0, 8));
   const [currentBanner, setCurrentBanner] = useState(0);
   const [playingVideo, setPlayingVideo] = useState(null);
-  const featuredProducts = products.slice(0, 8);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [bannerRes, catRes, videoRes] = await Promise.all([
+        const [bannerRes, catRes, videoRes, prodRes] = await Promise.all([
           fetch('/api/banners'),
           fetch('/api/categories'),
           fetch('/api/videos'),
+          fetch('/api/products'),
         ]);
         if (bannerRes.ok) {
           const data = await bannerRes.json();
@@ -40,7 +41,26 @@ export default function HomePage() {
           const data = await videoRes.json();
           if (data.videos && data.videos.length > 0) setVideos(data.videos);
         }
-      } catch (err) { /* fallback */ }
+        if (prodRes.ok) {
+          const data = await prodRes.json();
+          // API returns products ordered newest-first (created_at DESC)
+          if (data.products && data.products.length > 0) {
+            const mapped = data.products.map((p) => ({
+              id: `db-${p.id}`,
+              name: p.name,
+              price: p.price,
+              image: p.image || null,
+              imageUrl: p.image || null,
+              category: p.category,
+              categorySlug: p.category_slug,
+              type: p.type || 'sewa',
+              rating: p.rating || null,
+              condition: p.condition,
+            }));
+            setFeaturedProducts(mapped.slice(0, 8));
+          }
+        }
+      } catch (err) { /* fallback to mock data */ }
     }
     fetchData();
   }, []);
