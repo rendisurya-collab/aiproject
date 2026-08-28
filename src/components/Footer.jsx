@@ -1,7 +1,36 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, MessageCircle, Mail, MapPin, Phone } from 'lucide-react';
+import { Instagram, MessageCircle, Mail, MapPin, Phone, Youtube, Facebook, Music2 } from 'lucide-react';
 
 export default function Footer() {
+  const [contact, setContact] = useState({});
+
+  useEffect(() => {
+    async function fetchContact() {
+      try {
+        const res = await fetch('/api/settings/contact');
+        if (res.ok) {
+          const data = await res.json();
+          setContact(data.settings || {});
+        }
+      } catch (err) { /* use defaults */ }
+    }
+    fetchContact();
+  }, []);
+
+  const address = contact.contact_address || 'Jl. Raya Wedding No. 123, Jakarta Selatan';
+  const phone = contact.contact_phone || '+62 812-3456-7890';
+  const email = contact.contact_email || 'hello@rianriaspengantin.id';
+
+  // Social links (only show if URL is set)
+  const socials = [
+    { key: 'social_instagram', icon: Instagram, label: 'Instagram' },
+    { key: 'social_tiktok', icon: Music2, label: 'TikTok' },
+    { key: 'social_facebook', icon: Facebook, label: 'Facebook' },
+    { key: 'social_youtube', icon: Youtube, label: 'YouTube' },
+    { key: 'social_whatsapp', icon: MessageCircle, label: 'WhatsApp' },
+  ].filter((s) => contact[s.key]);
+
   return (
     <footer className="bg-gray-900 text-gray-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -20,29 +49,25 @@ export default function Footer() {
               Platform sewa busana &amp; dekorasi pernikahan terpercaya.
               Temukan gaun impian Anda dengan harga sewa terjangkau.
             </p>
-            <div className="flex space-x-3">
-              <a
-                href="#"
-                className="text-gray-400 hover:text-primary-400 transition-colors"
-                aria-label="Instagram"
-              >
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a
-                href="#"
-                className="text-gray-400 hover:text-primary-400 transition-colors"
-                aria-label="WhatsApp"
-              >
-                <MessageCircle className="w-5 h-5" />
-              </a>
-              <a
-                href="#"
-                className="text-gray-400 hover:text-primary-400 transition-colors"
-                aria-label="Email"
-              >
-                <Mail className="w-5 h-5" />
-              </a>
-            </div>
+            {socials.length > 0 && (
+              <div className="flex space-x-3">
+                {socials.map((s) => {
+                  const Icon = s.icon;
+                  return (
+                    <a
+                      key={s.key}
+                      href={contact[s.key]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-400 hover:text-primary-400 transition-colors"
+                      aria-label={s.label}
+                    >
+                      <Icon className="w-5 h-5" />
+                    </a>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Quick Links */}
@@ -105,15 +130,15 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-start space-x-2">
                 <MapPin className="w-4 h-4 mt-0.5 text-primary-400 flex-shrink-0" />
-                <span className="text-sm">Jl. Raya Wedding No. 123, Jakarta Selatan</span>
+                <span className="text-sm">{address}</span>
               </li>
               <li className="flex items-center space-x-2">
                 <Phone className="w-4 h-4 text-primary-400 flex-shrink-0" />
-                <span className="text-sm">+62 812-3456-7890</span>
+                <span className="text-sm">{phone}</span>
               </li>
               <li className="flex items-center space-x-2">
                 <Mail className="w-4 h-4 text-primary-400 flex-shrink-0" />
-                <span className="text-sm">hello@rianriaspengantin.id</span>
+                <span className="text-sm">{email}</span>
               </li>
             </ul>
           </div>

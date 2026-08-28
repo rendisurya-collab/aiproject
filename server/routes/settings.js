@@ -30,6 +30,21 @@ router.get('/about', async (req, res) => {
   }
 });
 
+// GET /api/settings/contact - Public, get contact & social media settings
+router.get('/contact', async (req, res) => {
+  try {
+    const db = await getDatabase();
+    const result = db.exec("SELECT setting_key, setting_value FROM site_settings WHERE setting_key LIKE 'contact_%' OR setting_key LIKE 'social_%'");
+    const rows = resultToObjects(result);
+    const settings = {};
+    rows.forEach((r) => { settings[r.setting_key] = r.setting_value; });
+    res.json({ settings });
+  } catch (err) {
+    console.error('Get contact settings error:', err);
+    res.status(500).json({ message: 'Terjadi kesalahan server' });
+  }
+});
+
 // GET /api/settings/all - Admin, get all settings
 router.get('/all', authenticateToken, async (req, res) => {
   try {

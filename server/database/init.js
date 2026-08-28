@@ -291,6 +291,14 @@ async function initDatabase() {
       ['about_cta_title', 'Bergabung Bersama Kami'],
       ['about_cta_desc', 'Bergabunglah dengan komunitas kami untuk menyewakan atau menyewa perlengkapan pernikahan.'],
       ['about_image', ''],
+      ['contact_address', 'Jl. Raya Wedding No. 123, Jakarta Selatan'],
+      ['contact_phone', '+62 812-3456-7890'],
+      ['contact_email', 'hello@rianriaspengantin.id'],
+      ['social_instagram', ''],
+      ['social_tiktok', ''],
+      ['social_facebook', ''],
+      ['social_youtube', ''],
+      ['social_whatsapp', ''],
     ];
     defaults.forEach(([key, value]) => {
       db.run('INSERT INTO site_settings (setting_key, setting_value) VALUES (?,?)', [key, value]);

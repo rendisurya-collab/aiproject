@@ -920,7 +920,12 @@ async function doDeleteBooking(id){
 let aboutSettings={};
 
 async function loadAboutSettings(){
-  try{const r=await fetch(API+'/api/settings/about');if(r.ok){const d=await r.json();aboutSettings=d.settings||{}}}catch(e){}
+  try{
+    const [aboutRes,contactRes]=await Promise.all([fetch(API+'/api/settings/about'),fetch(API+'/api/settings/contact')]);
+    const about=aboutRes.ok?(await aboutRes.json()).settings:{};
+    const contact=contactRes.ok?(await contactRes.json()).settings:{};
+    aboutSettings={...about,...contact};
+  }catch(e){}
 }
 
 function aboutHTML(){
@@ -981,6 +986,21 @@ function aboutHTML(){
     ${s.about_image?`<div style="margin-bottom:10px;border-radius:8px;overflow:hidden;height:120px;width:200px"><img src="${s.about_image}" style="width:100%;height:100%;object-fit:cover"/></div>`:''}
     <div class="fg"><label>Upload / Ganti Gambar About</label><input type="file" id="a_img" accept="image/*" onchange="uploadAboutImage()"/></div>
 
+    <h3 style="font-size:.85rem;font-weight:700;color:#16a34a;margin-bottom:10px;margin-top:18px">📞 Kontak</h3>
+    <div class="fg"><label>Alamat</label><textarea id="c_address" rows="2" placeholder="Alamat lengkap">${s.contact_address||''}</textarea></div>
+    <div class="row2">
+      <div class="fg"><label>No. Telepon</label><input id="c_phone" value="${s.contact_phone||''}" placeholder="+62 8xx-xxxx-xxxx"/></div>
+      <div class="fg"><label>Email</label><input id="c_email" value="${s.contact_email||''}" placeholder="email@domain.com"/></div>
+    </div>
+
+    <h3 style="font-size:.85rem;font-weight:700;color:#16a34a;margin-bottom:10px;margin-top:18px">🔗 Media Sosial</h3>
+    <p style="font-size:.65rem;color:#888;margin-bottom:10px">Masukkan URL lengkap. Kosongkan jika tidak dipakai.</p>
+    <div class="fg"><label>📷 Instagram</label><input id="s_instagram" value="${s.social_instagram||''}" placeholder="https://instagram.com/username"/></div>
+    <div class="fg"><label>🎵 TikTok</label><input id="s_tiktok" value="${s.social_tiktok||''}" placeholder="https://tiktok.com/@username"/></div>
+    <div class="fg"><label>👥 Facebook</label><input id="s_facebook" value="${s.social_facebook||''}" placeholder="https://facebook.com/username"/></div>
+    <div class="fg"><label>▶️ YouTube</label><input id="s_youtube" value="${s.social_youtube||''}" placeholder="https://youtube.com/@channel"/></div>
+    <div class="fg"><label>💬 WhatsApp</label><input id="s_whatsapp" value="${s.social_whatsapp||''}" placeholder="https://wa.me/6281234567890"/></div>
+
     <button class="btn btn-p" id="abtn" style="margin-top:12px">💾 Simpan Semua Perubahan</button>
   </form>
 </div>`}
@@ -1012,6 +1032,14 @@ async function saveAboutSettings(e){
     about_stat_4_label:document.getElementById('a_s4l').value,
     about_cta_title:document.getElementById('a_cta_title').value,
     about_cta_desc:document.getElementById('a_cta_desc').value,
+    contact_address:document.getElementById('c_address').value,
+    contact_phone:document.getElementById('c_phone').value,
+    contact_email:document.getElementById('c_email').value,
+    social_instagram:document.getElementById('s_instagram').value,
+    social_tiktok:document.getElementById('s_tiktok').value,
+    social_facebook:document.getElementById('s_facebook').value,
+    social_youtube:document.getElementById('s_youtube').value,
+    social_whatsapp:document.getElementById('s_whatsapp').value,
   };
   try{
     const r=await fetch(API+'/api/settings',{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({settings})});
