@@ -73,16 +73,16 @@ export default function ProductCard({ product }) {
         )}
 
         {/* Price */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-baseline space-x-1">
-            <span className="text-lg font-semibold text-gray-900">
+        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-2">
+          <div className="flex items-baseline flex-wrap gap-x-1 min-w-0">
+            <span className="text-base sm:text-lg font-semibold text-gray-900 break-words">
               {formatPrice(price)}
             </span>
-            <span className="text-xs text-gray-500">/hari</span>
+            <span className="text-xs text-gray-500 whitespace-nowrap">/hari</span>
           </div>
           <Link
             to={productLink}
-            className="flex items-center space-x-1 text-xs text-primary-600 hover:text-primary-700 font-medium"
+            className="flex items-center space-x-1 text-xs text-primary-600 hover:text-primary-700 font-medium whitespace-nowrap flex-shrink-0"
           >
             <Calendar className="w-3 h-3" />
             <span>Booking</span>
