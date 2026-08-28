@@ -211,8 +211,8 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Seller */}
-            <div className="flex items-center space-x-3 border rounded-lg p-3">
-              <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+            <div className="flex items-center space-x-3 floating-card !p-3">
+              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
                 <span className="text-gray-600 font-semibold text-sm">{product.seller.charAt(0)}</span>
               </div>
               <div className="flex-1">
@@ -238,7 +238,7 @@ export default function ProductDetailPage() {
                 <h3 className="font-semibold text-gray-900 mb-2">Ukuran Tersedia</h3>
                 <div className="flex flex-wrap gap-2">
                   {product.sizes.map((size) => (
-                    <button key={size} className="px-4 py-2 border border-gray-200 rounded-lg text-sm hover:border-primary-400 hover:text-primary-600 transition-colors">{size}</button>
+                    <button key={size} className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm shadow-sm hover:border-primary-400 hover:text-primary-600 transition-colors">{size}</button>
                   ))}
                 </div>
               </div>
@@ -263,12 +263,12 @@ export default function ProductDetailPage() {
               <button onClick={handleBooking} className="btn-primary flex-1 flex items-center justify-center space-x-2">
                 <CalendarDays className="w-5 h-5" /><span>Booking Sekarang</span>
               </button>
-              <button className="w-12 h-12 border-2 border-gray-200 rounded-lg flex items-center justify-center text-gray-500 hover:border-primary-400 hover:text-primary-600 transition-colors" aria-label="Tambah ke wishlist">
+              <button className="w-12 h-12 bg-white border-2 border-gray-200 rounded-lg shadow-sm flex items-center justify-center text-gray-500 hover:border-primary-400 hover:text-primary-600 transition-colors" aria-label="Tambah ke wishlist">
                 <Heart className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 pt-2">
+            <div className="grid grid-cols-2 gap-3 floating-card !p-4">
               <div className="flex items-center space-x-2 text-xs text-gray-600">
                 <ShieldCheck className="w-4 h-4 text-green-500" /><span>Produk Terverifikasi</span>
               </div>
