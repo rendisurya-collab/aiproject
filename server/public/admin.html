@@ -952,13 +952,13 @@ function faqHTML(){
   <h3 style="font-size:.82rem;font-weight:700;color:#16a34a;margin-bottom:8px;margin-top:${pending.length?'18px':'0'}">✅ Aktif (${active.length})</h3>
   ${active.length?`
   <div class="table-wrap"><table>
-    <thead><tr><th>Pertanyaan</th><th>Jawaban</th><th>Dipakai</th><th>Aksi</th></tr></thead>
+    <thead><tr><th style="min-width:180px">Pertanyaan</th><th style="min-width:220px">Jawaban</th><th style="text-align:center">Dipakai</th><th style="text-align:right">Aksi</th></tr></thead>
     <tbody>${active.map(f=>`
       <tr>
-        <td><b>${f.question}</b>${f.keywords?`<br/><span style="font-size:.6rem;color:#aaa">${f.keywords}</span>`:''}</td>
-        <td style="max-width:280px"><span style="font-size:.72rem;color:#555">${(f.answer||'').length>120?f.answer.substring(0,120)+'...':f.answer||''}</span></td>
-        <td style="font-size:.7rem;text-align:center">${f.hit_count||0}x</td>
-        <td><button class="btn btn-s btn-sm" onclick="openEditFaq(${f.id})">✏️</button> <button class="btn btn-d btn-sm" onclick="doDeleteFaq(${f.id})">🗑️</button></td>
+        <td style="white-space:normal;vertical-align:top"><b>${f.question}</b>${f.keywords?`<br/><span style="font-size:.6rem;color:#aaa">${f.keywords}</span>`:''}</td>
+        <td style="white-space:normal;vertical-align:top;max-width:260px"><span style="font-size:.72rem;color:#555">${(f.answer||'').length>90?f.answer.substring(0,90)+'...':f.answer||''}</span></td>
+        <td style="font-size:.7rem;text-align:center;vertical-align:top">${f.hit_count||0}x</td>
+        <td style="text-align:right;vertical-align:top;white-space:nowrap"><button class="btn btn-s btn-sm" onclick="openEditFaq(${f.id})">✏️</button> <button class="btn btn-d btn-sm" onclick="doDeleteFaq(${f.id})">🗑️</button></td>
       </tr>`).join('')}</tbody>
   </table></div>`:'<div class="empty"><p>Belum ada FAQ aktif</p></div>'}
 </div>`}
