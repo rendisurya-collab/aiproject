@@ -82,7 +82,7 @@ export default function HomePage() {
       {/* Banner / Hero Section */}
       {banners.length > 0 ? (
         <section className="relative overflow-hidden bg-gray-900">
-          <div className="relative h-[400px] md:h-[500px]">
+          <div className="relative w-full aspect-[16/7] max-h-[550px]">
             {banners.map((banner, index) => (
               <Link
                 key={banner.id}
@@ -92,19 +92,29 @@ export default function HomePage() {
                 }`}
               >
                 {banner.image ? (
-                  <img
-                    src={banner.image}
-                    alt={banner.title || ''}
-                    className="w-full h-full object-cover"
-                  />
+                  <>
+                    {/* Blurred background fill so any image ratio looks good */}
+                    <img
+                      src={banner.image}
+                      alt=""
+                      aria-hidden="true"
+                      className="absolute inset-0 w-full h-full object-cover scale-110 blur-xl opacity-60"
+                    />
+                    {/* Full image, not cropped */}
+                    <img
+                      src={banner.image}
+                      alt={banner.title || ''}
+                      className="relative w-full h-full object-contain z-10"
+                    />
+                  </>
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-primary-600 to-primary-800" />
                 )}
                 {/* Overlay */}
-                <div className={`absolute inset-0 ${banner.title ? 'bg-black/30' : 'bg-black/10'}`} />
+                <div className={`absolute inset-0 z-10 ${banner.title ? 'bg-black/30' : 'bg-black/10'}`} />
                 {/* Content text only - no button */}
                 {(banner.title || banner.subtitle) && (
-                  <div className="absolute inset-0 flex items-center pointer-events-none">
+                  <div className="absolute inset-0 z-20 flex items-center pointer-events-none">
                     <div className={`px-6 md:px-16 max-w-xl ${banners.length > 1 ? 'ml-auto mr-8 text-right' : 'ml-8 text-left'}`}>
                       {banner.title && (
                         <h1 className="text-2xl md:text-4xl font-serif font-bold text-white mb-3 drop-shadow-lg">
