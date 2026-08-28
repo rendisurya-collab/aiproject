@@ -179,7 +179,7 @@ export default function ProductDetailPage() {
             )}
 
             {/* Pricing & Booking */}
-            <div className="bg-primary-50 rounded-lg p-5">
+            <div className="floating-card">
               <div className="flex items-baseline space-x-2 mb-3">
                 <span className="text-3xl font-bold text-primary-700">{formatPrice(product.price)}</span>
                 <span className="text-sm text-primary-600">/hari</span>
