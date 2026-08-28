@@ -251,6 +251,20 @@ async function initDatabase() {
     )
   `);
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS faq_bank (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      question TEXT NOT NULL,
+      keywords TEXT,
+      answer TEXT,
+      status TEXT DEFAULT 'pending',
+      source TEXT DEFAULT 'manual',
+      hit_count INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Seed default categories
   const catCount = db.exec('SELECT COUNT(*) FROM categories');
   if (catCount[0].values[0][0] === 0) {
@@ -302,6 +316,21 @@ async function initDatabase() {
     ];
     defaults.forEach(([key, value]) => {
       db.run('INSERT INTO site_settings (setting_key, setting_value) VALUES (?,?)', [key, value]);
+    });
+  }
+
+  // Seed default FAQ bank
+  const faqCount = db.exec('SELECT COUNT(*) FROM faq_bank');
+  if (faqCount[0].values[0][0] === 0) {
+    const defaultFaqs = [
+      ['Bagaimana cara sewa?', 'cara,sewa,rental,proses,booking', 'Cara sewa mudah: 1) Pilih produk di katalog, 2) Tentukan tanggal & durasi sewa, 3) Klik "Booking Sekarang" & isi form, 4) Tim kami akan menghubungi Anda untuk konfirmasi. Produk dikirim H-1 dan dijemput H+1.', 'active', 'manual'],
+      ['Berapa harga sewa gaun pengantin?', 'harga,tarif,biaya,gaun,sewa,berapa', 'Harga sewa gaun pengantin mulai dari Rp 1.800.000/hari, tergantung model dan kondisi. Cek detail di katalog untuk harga masing-masing produk.', 'active', 'manual'],
+      ['Apakah ada sistem deposit?', 'deposit,jaminan,dp,uang muka', 'Ya, kami menerapkan deposit 30% dari total sewa yang akan dikembalikan sepenuhnya setelah produk dikembalikan dalam kondisi baik.', 'active', 'manual'],
+      ['Apakah bisa fitting dulu?', 'fitting,ukuran,coba,pas,size', 'Bisa. Kami menyediakan fitting gratis sebelum hari H untuk memastikan busana pas di badan Anda. Beberapa produk juga bisa di-alter.', 'active', 'manual'],
+      ['Apakah ada pengiriman?', 'kirim,antar,pengiriman,delivery,ongkir', 'Ya, kami melayani pengiriman & penjemputan. Produk dikirim H-1 sebelum acara dan dijemput H+1 setelahnya. Biaya kirim tergantung lokasi.', 'active', 'manual'],
+    ];
+    defaultFaqs.forEach(([q, kw, a, st, src]) => {
+      db.run('INSERT INTO faq_bank (question, keywords, answer, status, source) VALUES (?,?,?,?,?)', [q, kw, a, st, src]);
     });
   }
 

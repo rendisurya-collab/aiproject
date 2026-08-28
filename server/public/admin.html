@@ -171,6 +171,7 @@ function dashHTML(){return `
     <button class="tab ${tab==='videos'?'active':''}" onclick="switchTab('videos')">🎬 Video</button>
     <button class="tab ${tab==='bookingfields'?'active':''}" onclick="switchTab('bookingfields')">📋 Form Booking</button>
     <button class="tab ${tab==='bookings'?'active':''}" onclick="switchTab('bookings')">📑 Data Booking</button>
+    <button class="tab ${tab==='faq'?'active':''}" onclick="switchTab('faq')">🤖 Chatbot FAQ</button>
     <button class="tab ${tab==='about'?'active':''}" onclick="switchTab('about')">📄 Tentang</button>
   </div>
   <div id="content"></div>
@@ -188,11 +189,12 @@ function renderContent(){
   else if(tab==='videos')c.innerHTML=videoHTML();
   else if(tab==='bookingfields')c.innerHTML=bookingFieldsHTML();
   else if(tab==='bookings')c.innerHTML=bookingsHTML();
+  else if(tab==='faq')c.innerHTML=faqHTML();
   else if(tab==='about')c.innerHTML=aboutHTML();
   if(tab==='upload')setupDrop();
 }
 
-async function loadAll(){await Promise.all([loadProducts(),loadCategories(),loadBanners(),loadVideos(),loadBookingFields(),loadBookings(),loadAboutSettings()]); renderContent()}
+async function loadAll(){await Promise.all([loadProducts(),loadCategories(),loadBanners(),loadVideos(),loadBookingFields(),loadBookings(),loadFaqs(),loadAboutSettings()]); renderContent()}
 
 // ===== PRODUCTS =====
 async function loadProducts(){
@@ -914,6 +916,102 @@ async function updateBookingStatus(id,status){
 async function doDeleteBooking(id){
   if(!confirm('Yakin hapus data booking ini?'))return;
   try{const r=await fetch(API+'/api/bookings/'+id,{method:'DELETE',headers:{'Authorization':'Bearer '+token}});if(r.ok){await loadBookings();renderContent()}}catch(e){}
+}
+
+// ===== CHATBOT FAQ BANK =====
+let faqs=[];
+
+async function loadFaqs(){
+  try{const r=await fetch(API+'/api/chatbot/faq',{headers:{'Authorization':'Bearer '+token}});if(r.ok){const d=await r.json();faqs=d.faqs||[]}}catch(e){}
+}
+
+function faqHTML(){
+  const pending=faqs.filter(f=>f.status==='pending');
+  const active=faqs.filter(f=>f.status==='active');
+  return `
+<div class="card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <h2 style="font-size:1rem">🤖 Bank Data Chatbot (FAQ)</h2>
+    <button class="btn btn-p btn-sm" onclick="openAddFaq()">➕ Tambah FAQ</button>
+  </div>
+  <p style="font-size:.7rem;color:#888;margin-bottom:14px">Pertanyaan customer yang belum terjawab otomatis tersimpan sebagai <b>Pending</b>. Isi jawabannya agar chatbot bisa menjawab otomatis.</p>
+  <div id="faqmsg"></div>
+
+  ${pending.length?`
+  <h3 style="font-size:.82rem;font-weight:700;color:#d97706;margin-bottom:8px">⏳ Perlu Dijawab (${pending.length})</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Pertanyaan</th><th>Sumber</th><th>Aksi</th></tr></thead>
+    <tbody>${pending.map(f=>`
+      <tr>
+        <td><b>${f.question}</b></td>
+        <td><span style="font-size:.65rem;color:#888">${f.source==='customer_auto_save'?'🧑 Customer':'✍️ Manual'}</span></td>
+        <td><button class="btn btn-p btn-sm" onclick="openEditFaq(${f.id})">✏️ Jawab</button> <button class="btn btn-d btn-sm" onclick="doDeleteFaq(${f.id})">🗑️</button></td>
+      </tr>`).join('')}</tbody>
+  </table></div>`:''}
+
+  <h3 style="font-size:.82rem;font-weight:700;color:#16a34a;margin-bottom:8px;margin-top:${pending.length?'18px':'0'}">✅ Aktif (${active.length})</h3>
+  ${active.length?`
+  <div class="table-wrap"><table>
+    <thead><tr><th>Pertanyaan</th><th>Jawaban</th><th>Dipakai</th><th>Aksi</th></tr></thead>
+    <tbody>${active.map(f=>`
+      <tr>
+        <td><b>${f.question}</b>${f.keywords?`<br/><span style="font-size:.6rem;color:#aaa">${f.keywords}</span>`:''}</td>
+        <td style="max-width:280px"><span style="font-size:.72rem;color:#555">${(f.answer||'').length>120?f.answer.substring(0,120)+'...':f.answer||''}</span></td>
+        <td style="font-size:.7rem;text-align:center">${f.hit_count||0}x</td>
+        <td><button class="btn btn-s btn-sm" onclick="openEditFaq(${f.id})">✏️</button> <button class="btn btn-d btn-sm" onclick="doDeleteFaq(${f.id})">🗑️</button></td>
+      </tr>`).join('')}</tbody>
+  </table></div>`:'<div class="empty"><p>Belum ada FAQ aktif</p></div>'}
+</div>`}
+
+function openAddFaq(){
+  document.getElementById('modal').innerHTML=`
+  <div class="modal-bg" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h2>➕ Tambah FAQ</h2>
+      <div id="fqmsg"></div>
+      <form onsubmit="doAddFaq(event)">
+        <div class="fg"><label>Pertanyaan *</label><input id="fq_q" required placeholder="Contoh: Apakah bisa custom warna gaun?"/></div>
+        <div class="fg"><label>Kata Kunci (pisah koma)</label><input id="fq_kw" placeholder="custom,warna,gaun,ubah"/></div>
+        <div class="fg"><label>Jawaban</label><textarea id="fq_a" rows="4" placeholder="Jawaban yang akan diberikan chatbot"></textarea></div>
+        <div class="modal-acts"><button type="button" class="btn btn-s" onclick="closeModal()">Batal</button><button class="btn btn-p">💾 Simpan</button></div>
+      </form>
+    </div>
+  </div>`;
+}
+
+async function doAddFaq(e){
+  e.preventDefault();
+  const body={question:document.getElementById('fq_q').value,keywords:document.getElementById('fq_kw').value,answer:document.getElementById('fq_a').value};
+  try{const r=await fetch(API+'/api/chatbot/faq',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body)});if(r.ok){closeModal();await loadFaqs();renderContent()}else{const d=await r.json();document.getElementById('fqmsg').innerHTML=`<div class="alert alert-e">${d.message}</div>`}}catch(er){document.getElementById('fqmsg').innerHTML='<div class="alert alert-e">Gagal</div>'}
+}
+
+function openEditFaq(id){
+  const f=faqs.find(x=>x.id===id);if(!f)return;
+  document.getElementById('modal').innerHTML=`
+  <div class="modal-bg" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h2>✏️ ${f.status==='pending'?'Jawab Pertanyaan':'Edit FAQ'}</h2>
+      <div id="efqmsg"></div>
+      <form onsubmit="doUpdateFaq(event,${f.id})">
+        <div class="fg"><label>Pertanyaan *</label><input id="efq_q" value="${(f.question||'').replace(/"/g,'&quot;')}" required/></div>
+        <div class="fg"><label>Kata Kunci (pisah koma)</label><input id="efq_kw" value="${f.keywords||''}"/></div>
+        <div class="fg"><label>Jawaban *</label><textarea id="efq_a" rows="4" placeholder="Isi jawaban di sini agar chatbot bisa menjawab otomatis">${f.answer||''}</textarea></div>
+        <div class="fg"><label>Status</label><select id="efq_s"><option value="active" ${f.status==='active'?'selected':''}>Aktif (dipakai chatbot)</option><option value="pending" ${f.status==='pending'?'selected':''}>Pending (belum dipakai)</option></select></div>
+        <div class="modal-acts"><button type="button" class="btn btn-s" onclick="closeModal()">Batal</button><button class="btn btn-p">💾 Simpan</button></div>
+      </form>
+    </div>
+  </div>`;
+}
+
+async function doUpdateFaq(e,id){
+  e.preventDefault();
+  const body={question:document.getElementById('efq_q').value,keywords:document.getElementById('efq_kw').value,answer:document.getElementById('efq_a').value,status:document.getElementById('efq_s').value};
+  try{const r=await fetch(API+'/api/chatbot/faq/'+id,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body)});if(r.ok){closeModal();await loadFaqs();renderContent()}else{const d=await r.json();document.getElementById('efqmsg').innerHTML=`<div class="alert alert-e">${d.message}</div>`}}catch(er){document.getElementById('efqmsg').innerHTML='<div class="alert alert-e">Gagal</div>'}
+}
+
+async function doDeleteFaq(id){
+  if(!confirm('Yakin hapus FAQ ini?'))return;
+  try{const r=await fetch(API+'/api/chatbot/faq/'+id,{method:'DELETE',headers:{'Authorization':'Bearer '+token}});if(r.ok){await loadFaqs();renderContent()}}catch(e){}
 }
 
 // ===== ABOUT PAGE SETTINGS =====
